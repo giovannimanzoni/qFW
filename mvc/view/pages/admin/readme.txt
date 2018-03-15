@@ -1,0 +1,1 @@
+Inside this directory put only files specific to our admnistration super admin panel, not for client domain admin panel
