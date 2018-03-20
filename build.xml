@@ -38,12 +38,12 @@
     <!-- Generate checkstyle.xml -->
     <target name="build:phpcs" description="Checks for Coding Standard violations">
         <echo message="Executing phpCodeSniffer, output is in 'build/logs/CodingStandardViolations.xml'"/>
-        <exec command="${project.basedir}/vendor/bin/phpcs -p --standard=PHPCompatibility,PSR4 --encoding=utf-8
-                        --runtime-set testVersion 7.1- ${project.basedir} --report-width=120
+        <exec command="${project.basedir}/vendor/bin/phpcs -p --standard=PSR1,PSR2,PHPCompatibility --encoding=utf-8
+                        --runtime-set testVersion 7.1- ${project.basedir}/src/ --report-width=120
                         --report-checkstyle=${project.basedir}/build/logs/CodingStandardViolations.xml
                         --report-source=${project.basedir}/build/logs/CodingStandardViolationsSource.txt
                         --report-info=${project.basedir}/build/logs/CodingStandardViolationsInfo.txt
-                        --ignore=vendor,build,doc
+                        --ignore=${project.basedir}/src/mvc/model/fpdf/*
                         --extensions=php
                        " passthru="true" checkreturn="false"/>
     </target>
@@ -54,8 +54,8 @@
 
     <target name="build:phploc" description="Generates LOC statistics">
         <exec executable="${project.basedir}/vendor/bin/phploc" passthru="true">
-            <arg line="--log-csv ${project.basedir}/build/logs/phploc.csv --exclude vendor --exclude doc --exclude build --exclude mvc/model/fpdf" />
-            <arg path="${project.basedir}" />
+            <arg line="--log-csv ${project.basedir}/build/logs/phploc.csv --exclude src/mvc/model/fpdf" />
+            <arg path="${project.basedir}/src" />
         </exec>
     </target>
 
