@@ -15,7 +15,9 @@ use qFW\constants\encType\Multipart;
 use qFW\constants\encType\TextPlain;
 use qFW\constants\encType\UrlEncoded;
 use qFW\log\ILogOutput;
+use qFW\mvc\controller\lang\ILang;
 use qFW\mvc\controller\url\Url;
+use qFW\mvc\controller\vocabulary\Voc;
 use qFW\mvc\view\form\elements\IFormElements;
 use qFW\mvc\view\form\elements\TGlobalEventAttributes;
 use qFW\mvc\controller\dataTypes\UtString;
@@ -30,45 +32,57 @@ use qFW\mvc\controller\dataTypes\UtArray;
  */
 class FormObj
 {
-    /** @var \qFW\mvc\view\form\IFormObjBuilder  hold constructor*/
+    /** @var \qFW\mvc\view\form\IFormObjBuilder Hold constructor */
     private $objBuilder;
 
-    /** @var string action page*/
-    private $actionPage='';
+    /** @var string action page */
+    private $actionPage = '';
 
-    /** @var bool hold if form is multi page or single page. true = multi page */
+    /** @var bool Hold if form is multi page or single page. true = multi page */
     private $isMultiPage;
 
-    //opzionali
+    // Optionals
 
-    /** @var string hold form method */
+    /** @var string Hold form method */
     private $method = 'POST';
 
-    /** @var bool  hold if form will open a new page when submitted*/
+    /** @var bool Hold if form will open a new page when submitted */
     private $openInNewPage = false;
 
-    //gestione errori
+    // Error handling
 
-    /** @var bool  hold if form options/paramethers are checked*/
+    /** @var bool Hold if form options/paramethers are checked */
     private $checked = false;
 
-    /** @var bool  hold if form options values are valid*/
+    /** @var bool Hold if form options values are valid */
     private $valid = false;
 
-    /** @var bool  hold if form has got auto complete features*/
+    /** @var bool Hold if form has got auto complete features */
     private $autocomplete = false;
 
-    /** @var string  hold encoding type of the form*/
+    /** @var string Hold encoding type of the form */
     private $enctype = '';
 
-    /** @var array  hold pages names*/
+    /** @var array Hold pages names */
     private $pagesName = array();
 
-    /** @var int  hold number of pages*/
+    /** @var int Hold number of pages */
     private $numPagine = 0;
 
-    /** @var array  each element hold element of every form pages*/
+    /** @var array Each element hold element of every form pages */
     private $frmElementsByPage = array();
+
+    /** @var \qFW\mvc\controller\vocabulary\Voc */
+    private $voc;
+
+    /** @var \qFW\mvc\controller\dataTypes\UtArray */
+    private $utArr;
+
+    /** @var \qFW\mvc\controller\dataTypes\UtString */
+    private $utStr;
+
+    /** @var \qFW\mvc\controller\url\Url */
+    private $url;
 
     use TError;
     use TGlobalAttributes;
@@ -77,26 +91,34 @@ class FormObj
     /**
      * FormObj constructor.
      *
-     * @param string                                      $id           html id
-     * @param \qFW\mvc\view\form\IFormObjBuilder $objBuilder   object
-     * @param string                                      $actionPage   action page
-     * @param \qFW\log\ILogOutput                      $outputLog
-     * @param bool                                        $makeBlock    multipages form ?
+     * @param \qFW\mvc\view\form\IFormObjBuilder $objBuilder
+     * @param string                             $actionPage
+     * @param \qFW\log\ILogOutput                $outputLog
+     * @param bool                               $isMultiPage
      */
     public function __construct(
-        string $id,
         IFormObjBuilder $objBuilder,
         string $actionPage,
         ILogOutput $outputLog,
-        bool $makeBlock = false
+        bool $isMultiPage = false
     ) {
-        $this->createLogger($outputLog);
+        $lang = $outputLog->getLang();
 
-        $this->id = $id;
+        $this->voc = new Voc();
+        $this->utArr = new UtArray();
+
+        $this->createLogger($outputLog);
+        $this->loggerEngine->setLang($lang);
+
+        $this->utStr = new UtString($lang);
+        $this->url = new Url();
+
+
+        $this->id = $outputLog->getUid();
         $this->objBuilder = $objBuilder;
         $this->actionPage = $actionPage;
-        $this->setEncType(new UrlEncoded()); // default
-        $this->isMultiPage = $makeBlock;
+        $this->setEncType(new UrlEncoded()); // Default
+        $this->isMultiPage = $isMultiPage;
     }
 
     /**
@@ -154,7 +176,7 @@ class FormObj
     }
 
     /**
-     * when submitted, form open a new page
+     * When submitted, form open a new page
      *
      * @return $this
      */
@@ -166,7 +188,7 @@ class FormObj
 
 
     /************************************
-     * metodi dell'interfaccia
+     * Interface methods
      ***********************************/
 
     /**
@@ -176,9 +198,8 @@ class FormObj
      */
     public function check(): bool
     {
-
         /********************************************
-         * Ricava elementi di tutte le pagine
+         * Get items from all pages
          *******************************************/
         $this->pagesName = $this->objBuilder->getPagesName();
         $this->numPagine = count($this->pagesName);
@@ -187,14 +208,15 @@ class FormObj
             $this->frmElementsByPage[] = $this->objBuilder->getElements($this->pagesName[$n]);
         }
 
-        // controlla errori nel builder
+        // Check for errors in the builder
         if (!$this->objBuilder->check()) {
             $this->importLogs($this->objBuilder);
+        } else {
+            /*Ok*/
         }
 
-
         /********************************************
-         * Controlla errori in ogni elemento
+         * Check for errors in each element
          *******************************************/
         $ids = array();
         $elementWithAutofocus = 0;
@@ -202,54 +224,67 @@ class FormObj
         $tabIndexValues = array();
         foreach ($this->frmElementsByPage as $elPage) {
             foreach ($elPage as $element) {
-                //usato nella segnalazione degli errori
+                // Used in reporting errors
                 $elId = $element->getId();
 
-                // se elemento non passa il suo check -> errore
+                // If element does not pass its check -> error
                 if (!$element->check()) {
                     $this->importLogs($element);
                 }
 
                 /********************************************
-                 * Controlli Bootstrap
+                 * Bootstrap checks
                  *******************************************/
                 if ($element->isRatioSetted() && !$element->isHorizontal()) {
-                    $this->addLog("id='$elId': Conflitto, parametri ratio e orizzontale impostati entrambi ");
+                    $this->addLog("id='$elId': _VOC_", $this->voc->formRatioErr());
+                } else {
+                    /*Ok*/
                 }
                 if (!$element->isHorizontal()) {
                     $element->setLabelOnTop();
-                } // labelOnTop, label larga tutto il campo
-                // quindi allineamento è orizzontale
-                elseif (!$element->isRatioSetted()) {  // se non impostato ratio, imposta valore di default
+                } // labelOnTop, label wide the whole field so alignment is horizontal
+                elseif (!$element->isRatioSetted()) {  // If not set ratio, set default value
                     $element->setElementRatio(9);
-                } else {    // allineamento è orizzontale, ratio è impostato ma controllo
-                            //  se una delle due dimensioni è zero visto che non avrebbe senso, lo prevengo
+                } else {
+                    // Alignment is horizontal, ratio is set but let me check if one of the two dimensions is zero,
+                    // since it would not make sense, I warn it
                     if ($element->getCol1() == 0 && !$element->isLabelDisabled()) {
-                        $this->addLog("id='$elId': Dimensione label non impostata.");
+                        $this->addLog("id='$elId': _VOC_", $this->voc->formDimensionNotSet());
+                    } else {
+                        /*Ok*/
                     }
                     if ($element->getCol2() == 0) {
-                        $this->addLog("id='$elId': Dimensione elemento non impostata.");
+                        $this->addLog("id='$elId': Form element _VOC_", $this->voc->formDimensionNotSet());
+                    } else {
+                        /*Ok*/
                     }
                 }
 
-                // se non c'è la label, larghezza = massima
-                if ($element->getLabel() == '' && !$element->isLabelDisabled()) {
-                    $element->setLabelOnTop();
-                } // imposta col2=12
+                // If there is no label, width = maximum Set col2=12
+                if (!$this->isText($element)) {
+                    if ($element->getLabel() == '' && !$element->isLabelDisabled()) {
+                        $element->setLabelOnTop();
+                    } else {
+                        /*Ok*/
+                    }
+                } else {
+                    /*ok text, no setLabelOnTop()*/
+                }
 
-                // campi del form > di 12 va contro le proporzioni di bootstrap,
-                //  < di 1 non avrebbe senso creare campi e non mostrarli..
+                // Fields of the form > of 12 goes against the bootstrap proportions,
+                //  < of 1 would not make sense to create fields and not show them ..
                 $dim = $element->getElementDim();
                 if ($dim > 12 || $dim < 1) {
-                    $this->addLog("id='$elId': Dimensione campo errate: " . $dim);
+                    $this->addLog("id='$elId': _VOC_ ($dim)", $this->voc->formDimensionWrong());
+                } else {
+                    /*Ok*/
                 }
 
                 /********************************************
-                 * Controlli html
+                 * Html checks
                  *******************************************/
 
-
-                // check id duplicati
+                // Check duplicated id
                 if ($element->getId() != '') {
                     $ids[] = $elId;
                 }
@@ -257,118 +292,120 @@ class FormObj
                     $ids[] = $element->getContextMenuId();
                 }
 
-                // conteggia elementi con autofocus
+                // Count autofocus elements
                 if (method_exists($element, 'getAutofocus')) {
                     if ($element->getAutofocus()) {
                         $elementWithAutofocus++;
                     }
-                } // controllato a fine ciclo
+                } // check this at the end of loop
 
-                // conteggia accesskey
+                // Count accesskey
                 $key = $element->getAccesskey();
                 if ($key != '') {
                     $accesKeys[] = $key;
-                } // controllato a fine ciclo
+                } // check this at the end of loop
 
-                // controlla contextmenu
-                // se settati, entrambi devono essere popolati
+                // Check contextmenu
+                // If set, both must be populated
                 if (($element->getContextMenuId() != '') && ($element->getContextMenuHtml() == '')) {
-                    $this->addLog("id='$elId': Contexmenu con id='{$element->getContextMenuId()}'
-                                        impostato ma senza html");
+                    $this->addLog(
+                        "id='$elId': Contexmenu id='{$element->getContextMenuId()}' _VOC_",
+                        $this->voc->formSetNoHtml()
+                    );
                 }
                 if (($element->getContextMenuId() == '') && ($element->getContextMenuHtml() != '')) {
-                    $this->addLog("id='$elId': Contexmenu impostato senza id ");
+                    $this->addLog("id='$elId': Contexmenu _VOC_", $this->voc->formSetNoId());
                 }
 
-                // controlla global attrribute data-*
+                // Check global attribute data-*
                 $dataGAName = $element->getDataGAName();
                 $dataGAValue = $element->getDataGAValue();
                 if ($dataGAName != '') {
-                    // global attribute data-* name must be lowercase
+                    // Global attribute data-* name must be lowercase
                     $lowerDataGAName = strtolower($dataGAName);
                     if (strcmp($dataGAName, $lowerDataGAName) !== 0) {
-                        $this->addLog("id='$elId': The attribute name data-* 
-                                            should not contain any uppercase letters");
+                        $this->addLog("id='$elId': _VOC_", $this->voc->formDataNoUppercase());
                     }
 
-                    // global attribute value make no sense if empty
+                    // Global attribute value make no sense if empty
                     if ($dataGAValue == '') {
-                        $this->addLog("id='$elId': Valore per l'attributo data-* impostato vuoto");
+                        $this->addLog("id='$elId': _VOC_", $this->voc->formDataSetEmpty());
                     }
                 }
                 if (is_numeric($dataGAValue)) {
-                    $this->addLog("id='$elId': Valore per l'attributo data-* impostato di tipo numerico");
+                    $this->addLog("id='$elId': _VOC_", $this->voc->formDataSetNumeric());
                 }
 
-                // controlla draggable
+                // Check draggable
                 // @todo controllare se impostato draggable e se ci sn eventi drag, altrimenti segnalare errore
                 //  - https://www.w3schools.com/tags/tryit.asp?filename=tryhtml5_global_draggable
 
-                // controllo lang
-                $elLang = $element->getLang();
+                // Check lang
+                $elLang = $element->getLangGA();
                 if ($elLang != '') {
                     if (!$this->checkLang($elLang)) {
-                        $this->addLog("id='$elId': Valore per l'attributo lang non consentito");
+                        $this->addLog("id='$elId': _VOC_", $this->voc->formLangNotAllowed());
                     }
                 }
 
-                // controllo spellcheck
+                // Check spellcheck
                 if ($element->getSpellcheck()) {
                     /*
-                    Abilitabile solo per
+                    Can be set only for
                         Text values in input elements (not password)
                         Text in <textarea> elements
                         Text in editable elements
                     */
-                    // se editabile
-                    if ($element->getContentEditable()) {/* ok ammesso*/
+                    // If editable
+                    if ($element->getContentEditable()) {/* Ok allow*/
                     } elseif (0) {
-                        /* @todo ok per textarea */
+                        /* @todo ok for textarea */
                     } elseif (0) {
-                        /* @todo ok per input element ma non password */
+                        /* @todo ok for input element but not for password */
                     } else {
-                        $this->addLog("id='$elId': Impostato spellcheck su elemento che non lo può avere");
+                        $this->addLog("id='$elId': _VOC_", $this->voc->formSpellcheckNotAllowed());
                     }
                 }
 
-                // controllo se tab index duplicati
+                // Check if there are duplicate tab indexes
                 $tabIndex = $element->getTabIndex();
                 if ($tabIndex) {
                     $tabIndexValues[] = $tabIndex;
                 }
             }
         }
-        // controllo id duplicato
-        if (UtArray::checkDuplicateValues($ids)) {
-            $this->addLog('Rilevati id duplicati : ' . UtArray::getArrayDuplicateValues($ids));
+
+        // Duplicate id check
+        if ($this->utArr->checkDuplicateValues($ids)) {
+            $this->addLog("_VOC_ : {$this->utArr->getArrayDuplicateValues($ids)}.", $this->voc->formDuplicatedId());
         }
 
-        // controllo autofocus
+        // Autofocus check
         if ($elementWithAutofocus > 1) {
-            $this->addLog('Solo un elemento può avere l\'autofocus');
+            $this->addLog('_VOC_', $this->voc->formOnlyOneAutofocus());
         }
 
-        // controllo  accesskey
+        // Accesskey check
         foreach ($accesKeys as $key) {
             if (strlen($key) > 1) {
-                $this->addLog("Accesskey più lunga di un carattere: $key");
+                $this->addLog("_VOC_ ($key).", $this->voc->formAcceskeyTooLong());
             }
         }
-        if (UtArray::checkDuplicateValues($accesKeys)) {
-            $this->addLog('Accesskey duplicate');
+        if ($this->utArr->checkDuplicateValues($accesKeys)) {
+            $this->addLog('_VOC_', $this->voc->formAcceskeyDuplicated());
         }
 
-        // controllo tabindex duplicati
-        if (UtArray::checkDuplicateValues($tabIndexValues)) {
-            $this->addLog('Rilevati tabindex duplicati');
+        // Duplicate tabindex check
+        if ($this->utArr->checkDuplicateValues($tabIndexValues)) {
+            $this->addLog('_VOC_', $this->voc->formTabIndexDuplicated());
         }
 
         /************************************
-         * controlli sulle opzioni del form
+         * Checks on the options of the FORM
          ***********************************/
-        // enctype & post only
-        if ((UtString::areEqual($this->method, 'GET')) && ($this->enctype != '')) {
-            $this->addLog('Enctype non può essere impostato per form con method="GET"');
+        // Enctype & post only
+        if (($this->utStr->areEqual($this->method, 'GET')) && ($this->enctype != '')) {
+            $this->addLog('_VOC_', $this->voc->formEnctypeGetErr());
         }
 
         if ($this->getLogsQty() == 0) {
@@ -397,19 +434,21 @@ class FormObj
      */
     private function checkLang(string $lang): bool
     {
-        $arrlang = array('ab', 'aa', 'af', 'ak', 'sq', 'am', 'ar', 'an', 'hy', 'as', 'av', 'ae', 'ay', 'az', 'bm', 'ba',
-                         'eu', 'be', 'bn', 'bh', 'bi', 'bs', 'br', 'bg', 'my', 'ca', 'ch', 'ce', 'ny', 'zh', 'zh-Hans',
-                         'zh-Hant', 'cv', 'kw', 'co', 'cr', 'hr', 'cs', 'da', 'dv', 'nl', 'dz', 'en', 'eo', 'et', 'ee',
-                         'fo', 'fj', 'fi', 'fr', 'ff', 'gl', 'gd', 'gv', 'ka', 'de', 'el', 'kl', 'gn', 'gu', 'ht', 'ha',
-                         'he', 'hz', 'hi', 'ho', 'hu', 'is', 'io', 'ig', 'id', 'in', 'ia', 'ie', 'iu', 'ik', 'ga', 'it',
-                         'ja', 'jv', 'kl', 'kn', 'kr', 'ks', 'kk', 'km', 'ki', 'rw', 'rn', 'ky', 'kv', 'kg', 'ko', 'ku',
-                         'kj', 'lo', 'la', 'lv', 'li', 'ln', 'lt', 'lu', 'lg', 'lb', 'gv', 'mk', 'mg', 'ms', 'ml', 'mt',
-                         'mi', 'mr', 'mh', 'mo', 'mn', 'na', 'nv', 'ng', 'nd', 'ne', 'no', 'nb', 'nn', 'ii', 'oc', 'oj',
-                         'cu', 'or', 'om', 'os', 'pi', 'ps', 'fa', 'pl', 'pt', 'pa', 'qu', 'rm', 'ro', 'ru', 'se', 'sm',
-                         'sg', 'sa', 'sr', 'sh', 'st', 'tn', 'sn', 'ii', 'sd', 'si', 'ss', 'sk', 'sl', 'so', 'nr', 'es',
-                         'su', 'sw', 'ss', 'sv', 'tl', 'ty', 'tg', 'ta', 'tt', 'te', 'th', 'bo', 'ti', 'to', 'ts', 'tr',
-                         'tk', 'tw', 'ug', 'uk', 'ur', 'uz', 've', 'vi', 'vo', 'wa', 'cy', 'wo', 'fy', 'xh', 'yi', 'ji',
-                         'yo', 'za', 'zu');
+        $arrlang = array(
+            'ab', 'aa', 'af', 'ak', 'sq', 'am', 'ar', 'an', 'hy', 'as', 'av', 'ae', 'ay', 'az', 'bm', 'ba',
+            'eu', 'be', 'bn', 'bh', 'bi', 'bs', 'br', 'bg', 'my', 'ca', 'ch', 'ce', 'ny', 'zh', 'zh-Hans',
+            'zh-Hant', 'cv', 'kw', 'co', 'cr', 'hr', 'cs', 'da', 'dv', 'nl', 'dz', 'en', 'eo', 'et', 'ee',
+            'fo', 'fj', 'fi', 'fr', 'ff', 'gl', 'gd', 'gv', 'ka', 'de', 'el', 'kl', 'gn', 'gu', 'ht', 'ha',
+            'he', 'hz', 'hi', 'ho', 'hu', 'is', 'io', 'ig', 'id', 'in', 'ia', 'ie', 'iu', 'ik', 'ga', 'it',
+            'ja', 'jv', 'kl', 'kn', 'kr', 'ks', 'kk', 'km', 'ki', 'rw', 'rn', 'ky', 'kv', 'kg', 'ko', 'ku',
+            'kj', 'lo', 'la', 'lv', 'li', 'ln', 'lt', 'lu', 'lg', 'lb', 'gv', 'mk', 'mg', 'ms', 'ml', 'mt',
+            'mi', 'mr', 'mh', 'mo', 'mn', 'na', 'nv', 'ng', 'nd', 'ne', 'no', 'nb', 'nn', 'ii', 'oc', 'oj',
+            'cu', 'or', 'om', 'os', 'pi', 'ps', 'fa', 'pl', 'pt', 'pa', 'qu', 'rm', 'ro', 'ru', 'se', 'sm',
+            'sg', 'sa', 'sr', 'sh', 'st', 'tn', 'sn', 'ii', 'sd', 'si', 'ss', 'sk', 'sl', 'so', 'nr', 'es',
+            'su', 'sw', 'ss', 'sv', 'tl', 'ty', 'tg', 'ta', 'tt', 'te', 'th', 'bo', 'ti', 'to', 'ts', 'tr',
+            'tk', 'tw', 'ug', 'uk', 'ur', 'uz', 've', 'vi', 'vo', 'wa', 'cy', 'wo', 'fy', 'xh', 'yi', 'ji',
+            'yo', 'za', 'zu'
+        );
 
         return in_array($lang, $arrlang);
     }
@@ -434,7 +473,7 @@ class FormObj
 
 
             /**************************************
-             * apertura blocco jQuery tabs
+             * Opening jQuery block tabs
              **************************************/
             if ($this->numPagine > 1) {
                 $html .= '<div class="paginastep">
@@ -445,32 +484,29 @@ class FormObj
                     $tabNum = $key + 1;
                     $html .= "<li><a href='#tabs-$tabNum'>$name</a></li>";
                 }
-
                 $html .= '</ul>';
             }
 
-
             /**************************************
-             * elaborazione per ogni pagina
+             * Processing for each page
              **************************************/
             for ($pag = 0; $pag < $this->numPagine; $pag++) {
-                // apertura tab
+                // Open tab
                 $tabNum = $pag + 1;
                 if ($this->numPagine > 1) {
                     $html .= "<div id='tabs-$tabNum'>";
                 }
 
                 /**************************************
-                 * elaborazione per ogni elemento
+                 * Processing for each element
                  **************************************/
 
-                // per aggiungere in fondo al form la dicitura per gli elementi con compilazione obbligatoria
+                // This for add at the bottom of the form the wording for the elements with mandatory compilation
                 $numElem = count($this->frmElementsByPage[$pag]);
                 $i = 1;
 
-                // gestire last name nel caso ci siano due gruppi di checkbox
-                // gestire inline
-                // . nella classe (.checkbox-inline)
+                // @todo manage last name if there are two groups of checkboxes
+                // @todo manage inline in the class (.checkbox-inline)
 
                 foreach ($this->frmElementsByPage[$pag] as $element) {
                     $html .= $this->checkMultipleOjbPerLineStart($element);
@@ -493,13 +529,13 @@ class FormObj
 
                     $html .= $this->getHtml($element);
 
-                    $html .= '</div>'; //close form-group
+                    $html .= '</div>'; // Close form-group
 
                     $html .= $this->checkMultipleOjbPerLineEnd($element);
 
 
-                    // controllo per far comparire la scritta di scelta obbligatoria
-                    if (!$this->isMultiPage) { // non aggiunge la scritta per ogni blocco inserito
+                    // Check to make the mandatory choice appear
+                    if (!$this->isMultiPage) { // Does not add the writing for each block inserted
                         if ($i == ($numElem - 1)) {
                             $html .= '<div class="col-xs-12"><p class="qPanelFormRequiredString">'
                                 . $this->objBuilder->getRequiredSymbol() . $this->objBuilder->getRequiredString()
@@ -509,9 +545,9 @@ class FormObj
                     }
                 }
 
-                $html .= $this->bottoniPagina($pag);
+                $html .= $this->pageButtons($pag);
 
-                //chiusura tab
+                // Closing tab
                 if ($this->numPagine > 1) {
                     $html .= '</div>';
                 }
@@ -519,13 +555,13 @@ class FormObj
 
 
             /**************************************
-             * chiusura blocco jQuery tabs
+             * Close jQuery tabs block
              **************************************/
             if ($this->numPagine > 1) {
                 $html .= '</div></div>';
             }
 
-            // chiusura form
+            // Close the form
             if (!$this->isMultiPage) {
                 $html .= '</form>';
             }
@@ -534,16 +570,15 @@ class FormObj
         return $html;
     }
 
-    //bottoni avanti/indietro in fondo alla pagina
-
     /**
      * Make buttons if form is in multi page mode
+     *    buttons forward / back at the bottom of the page
      *
      * @param int $pag
      *
      * @return string
      */
-    private function bottoniPagina(int $pag): string
+    private function pageButtons(int $pag): string
     {
         $tabPag = $pag + 1;
         $html = '';
@@ -553,7 +588,7 @@ class FormObj
                 $html .= "  <div class='row'>
                                 <div class='col-xs-12'>
                                     <button id='nextPage$nextPag' type='button' 
-                                    class='btn btn-primary btn-lg'>Avanti</button>
+                                    class='btn btn-primary btn-lg'> > </button>
                                 </div>
                             </div>";
             } else {
@@ -563,7 +598,7 @@ class FormObj
                     $html .= "  <div class='row'>
                                     <div class='col-xs-12'>
                                         <button id='prevPage$prevPag' type='button' 
-                                        class='btn btn-primary btn-lg'>Indietro</button>
+                                        class='btn btn-primary btn-lg'> < </button>
                                     </div>
                                 </div>";
                 } else {
@@ -573,9 +608,9 @@ class FormObj
                     $html .= "  <div class='row'>
                                     <div class='col-xs-12'>
                                         <button id='prevPage$prevPag' type='button' 
-                                        class='btn btn-primary btn-lg'>Indietro</button>
+                                        class='btn btn-primary btn-lg'> < </button>
                                         <button id='nextPage$nextPag' type='button' 
-                                        class='btn btn-primary btn-lg'>Avanti</button>
+                                        class='btn btn-primary btn-lg'> > </button>
                                     </div>
                                 </div>";
                 }
@@ -595,9 +630,9 @@ class FormObj
     private function checkMultipleOjbPerLineStart(IFormElements $element): string
     {
         $html = '';
-        // conteggio se vanno mostrati piu oggetti sulla stessa riga
+        // Count if multiple objects are shown on the same row
         $elemDim = $element->getElementRowClass();
-        if ($elemDim != '') { // BOOTSTRAP_COLUMNS, come la x essere visibile anche qui ?
+        if ($elemDim != '') {
             $html .= "<div class='$elemDim'>";
         }
         return $html;
@@ -629,8 +664,8 @@ class FormObj
      */
     private function startFormTag(): string
     {
-
-        $html = "<form name='{$this->id}' method='{$this->method}' action='".Url::makeUrl($this->actionPage) ."' ";
+        $html = "<form name='{$this->id}' method='{$this->method}' action='"
+            . $this->url->makeUrl($this->actionPage) . "' ";
 
         $html .= $this->getGlobalAttributes();
 
@@ -665,17 +700,17 @@ class FormObj
     {
         $html = '';
 
-        //label
+        // Label
         $html .= $this->getLabel($el);
 
-        // oggetto
+        // Obj
         $html .= $el->make();
 
         if ($el->getContextMenuId() != '') {
             $html .= $el->getContextMenuHtml();
         }
 
-        // chiusura label per checkbox
+        // Closing label for checkbox
 
         if ($this->isCheckbox($el)) {
             if ($el->isRequired()) {
@@ -699,14 +734,14 @@ class FormObj
         $html = '';
         $label = $el->getLabel();
 
-        if ($label != '') { // scartiamo oggetti che non hanno label, per esempio i titoli o i campi hidden
+        if ($label != '') { // We discard objects that do not have labels, for example titles or hidden fields
             $html .= '<label class="';
 
-            if ($this->isCheckbox($el)) { // per checkbox
+            if ($this->isCheckbox($el)) { // For checkbox
                 $html .= 'checkbox " >';
-            } elseif ($this->isRadio($el)) { // per checkbox
+            } elseif ($this->isRadio($el)) { // For checkbox
                 $html .= 'radio " >';
-            } else { // per tutti gli altri tipi di obj
+            } else { // for all other types of obj
                 $html .= 'control-label ';
                 if ($el->isHorizontal()) {
                     $html .= 'col-xs-' . (12 - $el->getElementDim()) . ' labelToLeft';
@@ -731,7 +766,7 @@ class FormObj
      */
     private function isCheckBox(IFormElements $element): bool
     {
-        return UtString::areEqual($element->getElementType(), 'checkbox');
+        return $this->utStr->areEqual($element->getElementType(), 'checkbox');
     }
 
     /**
@@ -743,7 +778,7 @@ class FormObj
      */
     private function isDiv(IFormElements $element): bool
     {
-        return UtString::areEqual($element->getElementType(), 'div');
+        return $this->utStr->areEqual($element->getElementType(), 'div');
     }
 
     /**
@@ -755,6 +790,18 @@ class FormObj
      */
     private function isRadio(IFormElements $element): bool
     {
-        return UtString::areEqual($element->getElementType(), 'radio');
+        return $this->utStr->areEqual($element->getElementType(), 'radio');
+    }
+
+    /**
+     * Return if give element is a text
+     *
+     * @param \qFW\mvc\view\form\elements\IFormElements $element
+     *
+     * @return bool
+     */
+    private function isText(IFormElements $element): bool
+    {
+        return $this->utStr->areEqual($element->getElementType(), 'text');
     }
 }

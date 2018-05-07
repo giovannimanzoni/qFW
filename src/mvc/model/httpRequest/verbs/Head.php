@@ -19,7 +19,6 @@ namespace qFW\mvc\model\httpRequest\verbs;
  */
 class Head implements IVerbs
 {
-
     /**
      * Head constructor.
      */

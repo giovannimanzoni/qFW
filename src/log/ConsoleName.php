@@ -11,13 +11,13 @@ declare(strict_types=1);
 namespace qFW\log;
 
 /**
- * Class ConsolleName
+ * Class ConsoleName
  *
- * Manage logs for be compatible with web consolle
+ * Manage logs for be compatible with web console
  *
  * @package qFW\log
  */
-class ConsolleName extends AName implements ILogOutput
+class ConsoleName extends AName implements ILogOutput
 {
     /**
      * Get path for call right function by class name

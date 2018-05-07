@@ -23,14 +23,18 @@ use qFW\mvc\view\template\content\CHtml;
  */
 class Buttons1 extends CHtml implements IHtml
 {
-    /** @var array hold buttons */
+    /** @var array Hold buttons */
     private $buttons = array();
+
+    /** @var \qFW\mvc\controller\url\Url  */
+    private $url;
 
     /**
      * Button constructor.
      */
     public function __construct()
     {
+        $this->url = new Url();
     }
 
     /**
@@ -57,7 +61,7 @@ class Buttons1 extends CHtml implements IHtml
     {
         $html = '';
         foreach ($this->buttons as $btn) {
-            $link = Url::makeUrl($btn['link']);
+            $link = $this->url->makeUrl($btn['link']);
 
             $html .=
                 "

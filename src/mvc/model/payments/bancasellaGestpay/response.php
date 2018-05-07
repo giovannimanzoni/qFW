@@ -5,6 +5,7 @@
 
 <?php
 // @codingStandardsIgnoreStart
+// code form Banca Sella on github.com
 
 $test_env = true; 
 

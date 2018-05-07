@@ -13,6 +13,7 @@ namespace qFW\mvc\view\form;
 use qFW\log\ILogOutput;
 use qFW\log\LogMessage;
 use qFW\log\LogProxy;
+use qFW\mvc\controller\lang\ILang;
 
 /**
  * Trait TError
@@ -28,46 +29,66 @@ trait TError
     private $TErrorValid = false;
 
     /*********************************************
-     * Gestione errori
+     * Error management
      ********************************************/
     /************************************************
      * Log
      ************************************************/
 
-
-    public function createLogger(ILogOutput $outputLog)
+    /**
+     * Creat logger for every form field
+     *
+     * @todo $uid is unused
+     *
+     * @param \qFW\log\ILogOutput $logger
+     */
+    public function createLogger(ILogOutput $logger)
     {
-        $this->loggerEngine = new LogProxy($outputLog);
+        $this->loggerEngine = new LogProxy($logger);
     }
 
+    /**
+     * @return string
+     */
     public function getLogs(): string
     {
         return $this->loggerEngine->getLogs();
     }
 
+    /**
+     * @return int
+     */
     public function getLogsQty(): int
     {
         return $this->loggerEngine->getLogsQty();
     }
 
-    private function addLog(string $err)
+
+    /**
+     * @param string $err
+     * @param string $vocFun Name of function that must exist on Vocabulary
+     */
+    private function addLog(string $err, string $vocFun = '')
     {
-        $this->loggerEngine->log(new LogMessage('', $err));
+        $this->loggerEngine->log(new LogMessage('', $err, $vocFun));
     }
 
-    private function getCheckEsito(): bool
+    /**
+     * @return bool
+     */
+    private function getCheckOutcome(): bool
     {
-        $esito = true;
+        $outcome = true;
 
-        // se ha errori allora riporta false
+        // If there are errors, then it returns false
         if ($this->getLogsQty() != 0) {
-            $esito = false;
+            $outcome = false;
         }
 
-        // gestione controllo errori
+        // Error control management
         $this->TErrorChecked = true;
-        $this->TErrorValid = $esito;
+        $this->TErrorValid = $outcome;
 
-        return $esito;
+        return $outcome;
     }
 }

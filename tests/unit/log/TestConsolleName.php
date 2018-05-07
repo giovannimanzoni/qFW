@@ -3,26 +3,37 @@
 namespace qFW\tests\unit\log;
 
 use \PHPUnit\Framework\TestCase;
-use qFW\log\ConsolleName;
+use qFW\log\ConsoleName;
+use qFW\mvc\controller\lang\LangEn;
 
-class TestConsolleName extends TestCase
+class TestConsoleName extends TestCase
 {
+
+    private static $lang;
+
+    /**
+     * Setup class (Fixtures)
+     */
+    public static function setUpBeforeClass()
+    {
+        self::$lang = new LangEn();
+    }
 
     public function testSqlName()
     {
-        $val= new ConsolleName(123);
-        $this->assertEquals('qFW\log\Consolle\Consolle',$val->getName());
+        $val = new ConsoleName(123, self::$lang);
+        $this->assertEquals('qFW\log\Console\Console', $val->getName());
     }
 
     public function testSqlNameUidInt()
     {
-        $val= new ConsolleName(123);
-        $this->assertEquals('123',$val->getUid());
+        $val = new ConsoleName(123, self::$lang);
+        $this->assertEquals('123', $val->getUid());
     }
 
     public function testSqlNameUidString()
     {
-        $val= new ConsolleName('user1');
-        $this->assertEquals('user1',$val->getUid());
+        $val = new ConsoleName('user1', self::$lang);
+        $this->assertEquals('user1', $val->getUid());
     }
 }

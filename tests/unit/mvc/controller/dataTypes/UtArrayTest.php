@@ -13,18 +13,28 @@ use PHPUnit\Framework\TestCase;
 class UtArrayTest extends TestCase
 {
 
+    private static $utArr;
+
+    /**
+     * Setup class
+     */
+    public static function setUpBeforeClass()
+    {
+        self::$utArr = new UtArray();
+    }
+
     /**
      * Test found duplicate numeric value in array
      */
     public function testCheckDuplicateValuesNumeric()
     {
-        $arr[]=false;
-        $arr[]='b';
-        $arr[]=1;
-        $arr[]='stringa';
-        $arr[]=1;
+        $arr[] = false;
+        $arr[] = 'b';
+        $arr[] = 1;
+        $arr[] = 'stringa';
+        $arr[] = 1;
 
-        $this->assertTrue(UtArray::checkDuplicateValues($arr));
+        $this->assertTrue(self::$utArr->checkDuplicateValues($arr));
     }
 
     /**
@@ -32,13 +42,13 @@ class UtArrayTest extends TestCase
      */
     public function testCheckDuplicateValuesNumericString()
     {
-        $arr[]=false;
-        $arr[]='b';
-        $arr[]='1';
-        $arr[]='stringa';
-        $arr[]='b';
+        $arr[] = false;
+        $arr[] = 'b';
+        $arr[] = '1';
+        $arr[] = 'stringa';
+        $arr[] = 'b';
 
-        $this->assertTrue(UtArray::checkDuplicateValues($arr));
+        $this->assertTrue(self::$utArr->checkDuplicateValues($arr));
     }
 
     /**
@@ -47,10 +57,10 @@ class UtArrayTest extends TestCase
     public function testCheckDuplicateValueSimilarString()
     {
 
-        $arr[]='barca';
-        $arr[]='BARCA';
+        $arr[] = 'barca';
+        $arr[] = 'BARCA';
 
-        $this->assertFalse(UtArray::checkDuplicateValues($arr));
+        $this->assertFalse(self::$utArr->checkDuplicateValues($arr));
     }
 
     /**
@@ -58,10 +68,10 @@ class UtArrayTest extends TestCase
      */
     public function testCheckDuplicateValues2()
     {
-        $arr[]=false;
-        $arr[]=0;
+        $arr[] = false;
+        $arr[] = 0;
 
-        $this->assertFalse(UtArray::checkDuplicateValues($arr));
+        $this->assertFalse(self::$utArr->checkDuplicateValues($arr));
     }
 
     /**
@@ -69,19 +79,19 @@ class UtArrayTest extends TestCase
      */
     public function testGetArrayDuplicateValues()
     {
-        $arr[]=1;
-        $arr[]='barca bianca';
-        $arr[]='barca';
-        $arr[]=2;
-        $arr[]=1;
-        $arr[]='barca bianca';
-        $arr[]=true;
-        $arr[]='barca';
-        $arr[]='cipolla';
-        $arr[]='gatto';
+        $arr[] = 1;
+        $arr[] = 'barca bianca';
+        $arr[] = 'barca';
+        $arr[] = 2;
+        $arr[] = 1;
+        $arr[] = 'barca bianca';
+        $arr[] = true;
+        $arr[] = 'barca';
+        $arr[] = 'cipolla';
+        $arr[] = 'gatto';
 
 
-        $this->assertEquals('1 barca bianca barca',UtArray::getArrayDuplicateValues($arr));
+        $this->assertEquals('1 barca bianca barca', self::$utArr->getArrayDuplicateValues($arr));
     }
 
 
@@ -90,13 +100,13 @@ class UtArrayTest extends TestCase
      */
     public function testSearchValuesInArray()
     {
-        $arr=array(45,40,30,80,90,'casa','casa',30);
+        $arr = array(45, 40, 30, 80, 90, 'casa', 'casa', 30);
 
-        $this->assertFalse(UtArray::searchValuesInArray($arr, 70));
-        $this->assertTrue(UtArray::searchValuesInArray($arr, 40));
+        $this->assertFalse(self::$utArr->searchValuesInArray($arr, 70));
+        $this->assertTrue(self::$utArr->searchValuesInArray($arr, 40));
 
         // if found al least one -> return true
-        $this->assertTrue(UtArray::searchValuesInArray($arr, 'casa',70,45));
+        $this->assertTrue(self::$utArr->searchValuesInArray($arr, 'casa', 70, 45));
 
     }
 }

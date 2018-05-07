@@ -13,6 +13,7 @@ namespace qFW\mvc\view\pages\admin;
 use qFW\mvc\view\pages\HtmlDoc;
 use qFW\mvc\view\pages\elements\IContent;
 use qFW\mvc\view\pages\elements\INavbar;
+use qFW\mvc\view\template\IFooter;
 use qFW\mvc\view\template\ITplSidebar;
 
 /**
@@ -22,18 +23,24 @@ use qFW\mvc\view\template\ITplSidebar;
  */
 abstract class PanelHtmlDoc extends HtmlDoc
 {
-    /** @var string  hold page content */
+    /** @var string Hold page content */
     protected $content = '';
 
-    /** @var string  hold sidebar content */
+    /** @var string Hold sidebar content */
     protected $sidebar = '';
 
-    /** @var string  hold navbar content */
+    /** @var string Hold navbar content */
     protected $navbar = '';
 
-    /** @var string title of the page */
+    /** @var string Title of the page */
     protected $title = '';
 
+    /** @var string Html for footer*/
+    protected $footer='';
+
+    /**
+     * Clean session messages
+     */
     public function __destruct()
     {
         $_SESSION['err'] = '';
@@ -68,10 +75,13 @@ abstract class PanelHtmlDoc extends HtmlDoc
     abstract protected function setContent(IContent $content);
 
     /**
-     * Page template
+     * @param \qFW\mvc\view\template\IFooter $footer
      *
-     * @todo: nasconderlo con wrapper alla classe che lo eredita
-     *
+     * @return mixed
+     */
+    abstract protected function setFooter(IFooter $footer);
+
+    /**
      * @return string
      */
     protected function makeBody(): string
@@ -111,11 +121,7 @@ abstract class PanelHtmlDoc extends HtmlDoc
         </div>
         <!-- stop: container -->
         
-        <footer>
-            <p>
-                &copy; 2017-2018 <a href='https://imagingagency.com' alt='Imaging Agency'>Imaging Agency</a>
-            </p>
-        </footer>
+        <footer>{$this->footer}</footer>
         <div id='footerDx'></div>";
 
         return $html;
@@ -128,45 +134,36 @@ abstract class PanelHtmlDoc extends HtmlDoc
      */
     protected function endJs(): string
     {
-        $del = $this->del;
-
         // JQUERY & BOOTSTRAP
-        //jQuery (necessary for Bootstrap\'s JavaScript plugins)
+        //jQuery (mandatory for Bootstrap\'s JavaScript plugins)
         // @codingStandardsIgnoreStart
-        return "<script src=\"STATIC_ORIGIN/js/jquery.1.12.4.min.js\"></script> $del"
-            . "<script src=\"STATIC_ORIGIN/js/jquery-ui.min.js\"></script> $del"
-            . "<script src=\"STATIC_ORIGIN/js/bootstrap.3.3.7.min.js\"></script> $del"
+        return "<script src=\"STATIC_ORIGIN/js/jquery.1.12.4.min.js\"></script>"
+            . "<script src=\"STATIC_ORIGIN/js/jquery-ui.min.js\"></script>"
+            . "<script src=\"STATIC_ORIGIN/js/bootstrap.3.3.7.min.js\"></script>"
 
             //tokenfield
-            . "<script src=\"STATIC_ORIGIN/js/bootstrap-tokenfield.min.js\"></script> $del"
+            . "<script src=\"STATIC_ORIGIN/js/bootstrap-tokenfield.min.js\"></script>"
             //."<script src=\"STATIC_ORIGIN/js/typeahead.bundle.min.js\"></script> $t"
-            . "<script src=\"STATIC_ORIGIN/js/scrollspy.js\"></script> $del"
-            . "<script src=\"STATIC_ORIGIN/js/typeahead.bundle.min.js\"></script> $del"
-            . "<script src=\"STATIC_ORIGIN/js/docs.min.js \"></script> $del"
+            . "<script src=\"STATIC_ORIGIN/js/scrollspy.js\"></script>"
+            . "<script src=\"STATIC_ORIGIN/js/typeahead.bundle.min.js\"></script>"
+            . "<script src=\"STATIC_ORIGIN/js/docs.min.js \"></script>"
 
             // JQUERY ADD-ON
             //data tables
-            . "<script src=\"https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js\"></script> $del"
-            . "<script src=\"https://cdn.datatables.net/1.10.15/js/dataTables.bootstrap.min.js\"></script> $del"
-            . "<script src=\"https://cdn.datatables.net/autofill/2.2.0/js/dataTables.autoFill.min.js\"></script> $del"
-            . "<script src=\"https://cdn.datatables.net/autofill/2.2.0/js/autoFill.bootstrap.min.js\"></script> $del"
-            . "<script src=\"https://cdn.datatables.net/fixedcolumns/3.2.2/js/dataTables.fixedColumns.min.js\"></script> $del"
-            . "<script src=\"https://cdn.datatables.net/fixedheader/3.1.2/js/dataTables.fixedHeader.min.js\"></script> $del"
-            . "<script src=\"https://cdn.datatables.net/keytable/2.2.1/js/dataTables.keyTable.min.js\"></script> $del"
-            . "<script src=\"https://cdn.datatables.net/responsive/2.1.1/js/dataTables.responsive.min.js\"></script> $del"
-            . "<script src=\"https://cdn.datatables.net/responsive/2.1.1/js/responsive.bootstrap.min.js\"></script> $del"
-            . "<script src=\"https://cdn.datatables.net/rowgroup/1.0.0/js/dataTables.rowGroup.min.js\"></script> $del"
-            . "<script src=\"https://cdn.datatables.net/rowreorder/1.2.0/js/dataTables.rowReorder.min.js\"></script> $del"
-            . "<script src=\"https://cdn.datatables.net/scroller/1.4.2/js/dataTables.scroller.min.js\"></script> $del"
-            . "<script src=\"https://cdn.datatables.net/select/1.2.2/js/dataTables.select.min.js\"></script> $del"
-
-            . "<script src=\"https://cdn.datatables.net/autofill/2.2.0/js/dataTables.autoFill.min.js\"></script> $del";
+            . "<script src=\"https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js\"></script>"
+            . "<script src=\"https://cdn.datatables.net/1.10.15/js/dataTables.bootstrap.min.js\"></script>"
+            . "<script src=\"https://cdn.datatables.net/autofill/2.2.0/js/dataTables.autoFill.min.js\"></script>"
+            . "<script src=\"https://cdn.datatables.net/autofill/2.2.0/js/autoFill.bootstrap.min.js\"></script>"
+            . "<script src=\"https://cdn.datatables.net/fixedcolumns/3.2.2/js/dataTables.fixedColumns.min.js\"></script>"
+            . "<script src=\"https://cdn.datatables.net/fixedheader/3.1.2/js/dataTables.fixedHeader.min.js\"></script>"
+            . "<script src=\"https://cdn.datatables.net/keytable/2.2.1/js/dataTables.keyTable.min.js\"></script>"
+            . "<script src=\"https://cdn.datatables.net/responsive/2.1.1/js/dataTables.responsive.min.js\"></script>"
+            . "<script src=\"https://cdn.datatables.net/responsive/2.1.1/js/responsive.bootstrap.min.js\"></script>"
+            . "<script src=\"https://cdn.datatables.net/rowgroup/1.0.0/js/dataTables.rowGroup.min.js\"></script>"
+            . "<script src=\"https://cdn.datatables.net/rowreorder/1.2.0/js/dataTables.rowReorder.min.js\"></script>"
+            . "<script src=\"https://cdn.datatables.net/scroller/1.4.2/js/dataTables.scroller.min.js\"></script>"
+            . "<script src=\"https://cdn.datatables.net/select/1.2.2/js/dataTables.select.min.js\"></script>"
+        ;
             // @codingStandardsIgnoreEnd
-
-        //."<script src=\"https://code.jquery.com/ui/1.12.1/jquery-ui.js\"></script>$t";
-        // in comune x attivi e non attivi - https://jqueryui.com/checkboxradio/#default
-
-        // COMPATIBILITÀ CSS TRA BROWSER
-        //."<script src=\"js/modernizr.js\"></script>$t";
     }
 }

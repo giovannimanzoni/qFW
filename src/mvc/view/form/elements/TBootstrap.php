@@ -19,19 +19,22 @@ namespace qFW\mvc\view\form\elements;
  */
 trait TBootstrap
 {
-
     private $col1 = 0;
     private $col2 = 0;
     private $ratioSetted = false;
     private $rowClass = 'col-xs-12';
-    private $horizontal = true;  // true: label a sx, false: label sopra all'oggetto
+    private $horizontal = true;  // True: label a sx, false: label sopra all'oggetto
 
 
     /*************************************************
-     * usati per la creazione dell'oggetto
+     * Used for creating the object
      ************************************************/
 
-    // Imposta label sopra agli oggetti. default orizzontale
+    /**
+     * Set label above objects. horizontal default
+     *
+     * @return $this
+     */
     public function setLabelOnTop()
     {
         $this->horizontal = false;
@@ -40,7 +43,13 @@ trait TBootstrap
         return $this;
     }
 
-    // Imposta rapporto tra label e oggetto se messi in orizzontale. default label = 3 e obj = 9
+    /**
+     * Set ratio between label and object if placed horizontally. default label = 3 e obj = 9
+     *
+     * @param int $col2
+     *
+     * @return $this
+     */
     public function setElementRatio(int $col2)
     {
         $this->col1 = self::BOOTSTRAP_COLUMNS - $col2;
@@ -49,8 +58,13 @@ trait TBootstrap
         return $this;
     }
 
-    // Imposta la dimensione di label+oggetto sulla riga di bootstrap.
-    //  default impostato a BOOTSTRAP_COLUMNS cioè un solo oggetto pewr riga
+    /**
+     * Set the size of label+object on the bootstrap line.
+     *      default set toBOOTSTRAP_COLUMNS that is, only one object per line
+     * @param string $class
+     *
+     * @return $this
+     */
     public function setElementRowClass(string $class)
     {
         $this->rowClass = $class;
@@ -59,34 +73,52 @@ trait TBootstrap
 
 
     /*************************************************
-     * usati per la costruzione del form
+     * Used for the construction of the form
      ************************************************/
 
+    /**
+     * @return int
+     */
     public function getElementDim(): int
     {
         return $this->col2;
     }
 
+    /**
+     * @return bool
+     */
     public function isHorizontal(): bool
     {
         return $this->horizontal;
     }
 
+    /**
+     * @return string
+     */
     public function getElementRowClass(): string
     {
         return $this->rowClass;
     }
 
+    /**
+     * @return bool
+     */
     public function isRatioSetted(): bool
     {
         return $this->ratioSetted;
     }
 
+    /**
+     * @return int
+     */
     public function getCol1(): int
     {
         return $this->col1;
     }
 
+    /**
+     * @return int
+     */
     public function getCol2(): int
     {
         return $this->col2;

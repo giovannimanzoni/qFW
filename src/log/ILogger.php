@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace qFW\log;
 
+use qFW\mvc\controller\lang\ILang;
+
 /**
  * Interface ILogger
  *
@@ -22,9 +24,10 @@ interface ILogger
     /**
      * ILogger constructor.
      *
-     * @param $uid string|int user id
+     * @param        $uid
+     * @param string $lang
      */
-    public function __construct($uid);
+    public function __construct($uid, string $lang);
 
     /**
      * Return the html code for see all logs
@@ -48,4 +51,13 @@ interface ILogger
      * @return mixed
      */
     public function log(ILogMessage $log);
+
+    /**
+     * Setup lang for create vocabulary
+     *
+     * @param \qFW\mvc\controller\lang\ILang $lang
+     *
+     * @return mixed
+     */
+    public function setLang(ILang $lang);
 }

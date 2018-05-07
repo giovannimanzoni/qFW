@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace qFW\mvc\view\form;
 
 use qFW\log\ILogOutput;
+use qFW\mvc\controller\lang\ILang;
 use qFW\mvc\view\form\elements\IFormElements;
 
 /**
@@ -22,25 +23,25 @@ use qFW\mvc\view\form\elements\IFormElements;
  */
 class FormPage implements IFormPage
 {
-    /** @var array  elements of the page*/
+    /** @var array Elements of the page */
     private $formElements = array();
 
-    /** @var string  name of the page*/
-    private $pageName = '';
+    /** @var string Name of the page */
+    private $pageName;
 
-    /** @var \qFW\log\ILogOutput  output log*/
-    private $outputLog;
+    /** @var \qFW\log\ILogOutput Output log */
+    private $logger;
 
     /**
      * FormPage constructor.
      *
-     * @param string                 $pageName      name of the page
-     * @param \qFW\log\ILogOutput $outputLog
+     * @param \qFW\log\ILogOutput            $logger
+     * @param string                         $pageName
      */
-    public function __construct(string $pageName, ILogOutput $outputLog)
+    public function __construct(ILogOutput $logger, string $pageName = ' ')
     {
         $this->pageName = $pageName;
-        $this->outputLog = $outputLog;
+        $this->logger = $logger;
     }
 
     /**
@@ -52,8 +53,8 @@ class FormPage implements IFormPage
      */
     public function addElement(IFormElements $formElement)
     {
+        $formElement->createLogger($this->logger);
         $this->formElements[] = $formElement;
-        $formElement->createLogger($this->outputLog, $this->outputLog->getUid());
         return $this;
     }
 

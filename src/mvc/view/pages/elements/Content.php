@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace qFW\mvc\view\pages\elements;
 
 use qFW\mvc\controller\dataTypes\UtString;
+use qFW\mvc\controller\lang\ILang;
 use qFW\mvc\view\template\content\ITplContent;
 use qFW\mvc\controller\url\Url;
 
@@ -24,25 +25,30 @@ use qFW\mvc\controller\url\Url;
  */
 final class Content implements IContent
 {
-    /** @var string html code delimiter */
-    private $del = '';
 
-    /** @var string hold html code for content */
+    /** @var string Hold html code for content */
     private $html = '';
 
-    /** @var string html code for breacumb */
+    /** @var string Html code for breacumb */
     private $breacumb = '';
+
+    /** @var \qFW\mvc\controller\dataTypes\UtString  */
+    private $utStr;
+
+    /** @var \qFW\mvc\controller\url\Url  */
+    private $url;
 
     /**
      * Content constructor.
      *
      * @param \qFW\mvc\view\template\content\ITplContent $templateContent
-     * @param string                                     $del
+     * @param \qFW\mvc\controller\lang\ILang             $lang
      */
-    public function __construct(ITplContent $templateContent, string $del = "\n")
+    public function __construct(ITplContent $templateContent, ILang $lang)
     {
         $this->html = $templateContent->getHtml();
-        $this->del = $del;
+        $this->utStr= new UtString($lang);
+        $this->url = new Url();
     }
 
     /**
@@ -54,18 +60,16 @@ final class Content implements IContent
      */
     public function addBreadcrumb(array $breadcrumb)
     {
-        $del = $this->del;
+        $html = "<div><ul class='breadcrumb'><li><i class='fas fa-home'></i>";
 
-        $html = "<div><ul class='breadcrumb'>$del<li><i class='fas fa-home'></i>$del";
-
-        // first
-        $html .= "Home</a>$del";
+        // First element
+        $html .= "Home</a>";
         if (!empty($breadcrumb)) {
-            $html .= "<i class='fas fa-caret-right'></i>$del";
+            $html .= "<i class='fas fa-caret-right'></i>";
         }
-        $html .= "	</li> $del";
+        $html .= '</li>';
 
-        // seguenti
+        // Other elements
         if (!empty($breadcrumb)) {
             $count = count($breadcrumb);
             foreach ($breadcrumb as $index => $elem) {
@@ -74,24 +78,24 @@ final class Content implements IContent
                 $title = @$arrExpl[0];
                 $link = @$arrExpl[1];
 
-                $html .= "<li> $del";
+                $html .= '<li>';
 
-                //se è un link ad una pagina allora inserisce link
-                if (UtString::areEqual($link, '#')) { // è solo una label
+                // If it is a link to a page then it inserts links
+                if ($this->utStr->areEqual($link, '#')) { // It is only a label
                     $html .= $title;
-                } else { // è un link
-                    $html .= '<a href="' . Url::makeUrl($link) . "\">$title</a>  $del";
+                } else { // It is a link
+                    $html .= '<a href="' . $this->url->makeUrl($link) . "\">$title</a>";
                     if ($index < $count - 1) {
-                        $html .= "<i class='fas fa-caret-right'></i>$del";
+                        $html .= "<i class='fas fa-caret-right'></i>";
                     }
                 }
 
-                $html .= "</li> $del";
+                $html .= '</li>';
             }
         }
 
-        //close
-        $html .= "</ul></div> $del";
+        // Close
+        $html .= '</ul></div>';
         $this->breacumb = $html;
         return $this;
     }

@@ -31,7 +31,7 @@ class None extends ALogger implements ILogger
     public function getLogs(): string
     {
         $html='';
-
+        unset($_SESSION['ALOGGER']);
         return $html;
     }
 }

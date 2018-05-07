@@ -21,28 +21,55 @@ use qFW\mvc\controller\url\Url;
  */
 class Routing
 {
+    /** @var string Hold url for possible extension of this class */
+    protected $scriptName = '';
+
+    /** @var \qFW\mvc\controller\url\Url */
+    protected $url;
+
+    /** @var string website folder */
+    protected $folder = '';
+
 
     /**
      * Routing constructor.
+     *
+     * @param bool   $isAdmin
+     * @param string $folder    default ''
      */
-    public function __construct()
+    public function __construct(bool $isAdmin = true, string $folder = '')
     {
-        $reqPage = Url::getScriptName();
-        if (!$this->isPageIncluded()) { // specific for page not included (default)
-            $this->initSession($reqPage);
+        $this->url = new Url();
+        $this->scriptName = $this->url->getScriptName();
+        $this->folder = $folder;
 
-            $this->redirectToLoginIfLogout($reqPage);
+        if (!$this->isPageIncluded()) { // Specific for page not included (default, for debug)
+            $this->initSession($this->scriptName);
 
-            if ($this->isAdmin()) {
-                $this->redirectToIndexIfLoginPage($reqPage);
-            } else { // not admin
-                $this->redirectToLoginIfNotLoginPage($reqPage);
+            if ($isAdmin) {
+                $this->redirectToLoginIfLogout($this->scriptName);
+
+                if ($this->isAdmin()) {
+                    $this->redirectToIndexIfLoginPage($this->scriptName);
+                } else { // Not admin
+                    $this->redirectToLoginIfNotLoginPage($this->scriptName);
+                }
+            } else {
+                /*Ok*/
             }
-        } else { // specific for page included in Administrator qPanel, for test purpose
-            $this->redirectToLoginIfLogout($reqPage);
+        } elseif ($isAdmin) { // Specific for page included in Administrator qPanel, for test purpose
+            $this->redirectToLoginIfLogout($this->scriptName);
+        } else {
+            /*Ok*/
         }
+    }
 
-        // common
+    /**
+     * @return string
+     */
+    public function getScriptName(): string
+    {
+        return $this->scriptName;
     }
 
     /**
@@ -55,13 +82,12 @@ class Routing
                 $_SESSION = array();
                 session_unset();
                 session_destroy();
-                Url::redirect('/login.php');
+                $this->url->redirect("{$this->folder}/login.php");
                 break;
             default:
                 break;
         }
     }
-
 
     /**
      * Redirect to login if this page is not the login page
@@ -75,7 +101,7 @@ class Routing
             case 'trylogin.php':
                 break;
             default:
-                Url::redirect('/login.php');
+                $this->url->redirect("{$this->folder}/login.php");
                 break;
         }
     }
@@ -90,14 +116,13 @@ class Routing
         switch ($reqPage) {
             case 'login.php':
             case 'trylogin.php':
-                Url::redirect('/index.php');
+                $this->url->redirect("{$this->folder}/index.php");
                 break;
             default:
-                // no redirect, the page will be loaded
+                // No redirect, the page will be loaded
                 break;
         }
     }
-
 
     /**
      * Check if user is admin
@@ -108,9 +133,11 @@ class Routing
     {
         $ret = false;
 
-        // isValidAdmin: true if user is logged into qPanel
+        // isValidAdmin: True if user is logged into ADMIN AREA
         if (isset($_SESSION['isValidAdmin']) && !empty($_SESSION['isValidAdmin'])) {
             $ret = true;
+        } else {
+            /*Ok*/
         }
         return $ret;
     }
@@ -125,38 +152,43 @@ class Routing
         $ret = false;
         if (isset($_SESSION['err']) || isset($_SESSION['mex'])) {
             $ret = true;
-        } else {/* is false*/
+        } else {/* Is false*/
         }
 
         return $ret;
     }
 
-
     /**
      * Init Session
+     *
+     * @param string $reqPage
      */
     private function initSession(string $reqPage)
     {
         ob_start();
+        // ob_end_flush() isn't needed in MOST cases because it is called automatically at the end of script execution
+        // by PHP itself when output buffering is turned on either in the php.ini or by calling ob_start().
+
         session_start();
         $now = time();
         if (isset($_SESSION['timeout']) && $now > $_SESSION['timeout']) {
-            //evito redirect ricorsivo se pagina corrispone a logout
+            // avoid recursive redirect if page is logout page
             switch ($reqPage) {
                 case 'logout.php':
                     break;
                 default:
-                    Url::redirect('/logout.php');
+                    $this->url->redirect("{$this->folder}/logout.php");
                     break;
             }
         } else { /* ok */
         }
 
-        // either new or old, it should live at most for another hour
+        // Either new or old, it should live at most for another hour
         $_SESSION['timeout'] = $now + 3600;
 
-        // se non esistono crea le variabili, altrimenti preserva i messaggi passati da una pagina all'altra
-        $_SESSION['err'] = $_SESSION['err'] ?? '';
-        $_SESSION['mex'] = $_SESSION['mex'] ?? '';
+        // If do not exists, create them, otherwise preserv values
+        $_SESSION['err'] = $_SESSION['err'] ?? ''; // Error to show to user
+        $_SESSION['mex'] = $_SESSION['mex'] ?? ''; // Message for user
+        $_SESSION['adminLog'] = $_SESSION['adminLog'] ?? ''; // Message to be logged in database for administrator
     }
 }

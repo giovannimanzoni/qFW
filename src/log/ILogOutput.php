@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace qFW\log;
 
+use qFW\mvc\controller\lang\ILang;
+
 /**
  * Interface ILogOutput
  *
@@ -22,9 +24,10 @@ interface ILogOutput
     /**
      * ILogOutput constructor.
      *
-     * @param $uid string|int user id
+     * @param                                $uid
+     * @param \qFW\mvc\controller\lang\ILang $lang
      */
-    public function __construct($uid);
+    public function __construct($uid, ILang $lang);
 
     /**
      * Get path for call right function by class name
@@ -39,4 +42,11 @@ interface ILogOutput
      * @return string|int
      */
     public function getUid();
+
+    /**
+     * Get Lang
+     *
+     * @return mixed
+     */
+    public function getLang(): ILang;
 }

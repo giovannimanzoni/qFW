@@ -17,7 +17,6 @@ namespace qFW\mvc\view\form\elements\input;
  */
 class InputTel implements IFormInput
 {
-
     /**
      * Get type of input
      *

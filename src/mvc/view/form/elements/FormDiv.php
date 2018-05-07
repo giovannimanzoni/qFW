@@ -9,6 +9,8 @@
 declare(strict_types=1);
 namespace qFW\mvc\view\form\elements;
 
+use qFW\mvc\controller\lang\ILang;
+use qFW\mvc\controller\vocabulary\Voc;
 use qFW\mvc\view\form\TError;
 use qFW\mvc\view\form\TGlobalAttributes;
 
@@ -24,6 +26,9 @@ class FormDiv implements IFormElements
     /** @var string html id  */
     private $id='';
 
+    /** @var \qFW\mvc\controller\vocabulary\Voc  */
+    private $voc;
+
     use TError;
     use TGlobalAttributes;
 
@@ -35,10 +40,11 @@ class FormDiv implements IFormElements
     public function __construct(string $id)
     {
         $this->id = $id;
+        $this->voc= new Voc();
     }
 
     /*********************************************************************************************************
-     * metodi definiti nell'interfaccia ma non usati
+     * Methods defined in the interface but not used
      ********************************************************************************************************/
 
     // @codingStandardsIgnoreStart
@@ -116,7 +122,7 @@ class FormDiv implements IFormElements
 
 
     /*********************************************************************************************************
-     * metodi usati
+     *  Used methods
      ********************************************************************************************************/
 
     /**

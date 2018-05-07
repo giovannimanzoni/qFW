@@ -15,25 +15,34 @@ use qFW\mvc\controller\url\Url;
 /**
  * Class SidebarTpl
  *
+ * You have to init $url in your class
+ *
  * @package qFW\mvc\view\template
  */
 abstract class SidebarTpl
 {
-    /** @var string delimiter */
-    protected $del = '';
-
-    /** @var string hold html */
+    /** @var string Hold html */
     protected $html = '';
 
     /** @var int */
     protected $maxLev1 = 0;
 
-    /** @var int level of menu of sidebar */
+    /** @var int Level of menu of sidebar */
     protected $lev1 = 0;
 
-    /** @var int level of sub menu of sidebar */
+    /** @var int Level of sub menu of sidebar */
     protected $lev2 = 0;
 
+    /** @var */
+    protected $url;
+
+    /**
+     * SidebarTpl constructor.
+     */
+    public function __construct()
+    {
+        $this->url = new Url();
+    }
 
     /**
      * Get html for menu block
@@ -49,13 +58,11 @@ abstract class SidebarTpl
     /**
      * Start Navbar
      *
-     * @param int    $lev1
-     * @param int    $lev2
-     * @param string $del
+     * @param int $lev1
+     * @param int $lev2
      */
-    protected function startSidebar(int $lev1, int $lev2, string $del = "\n")
+    protected function startSidebar(int $lev1, int $lev2)
     {
-        $this->del = $del;
         $this->lev1 = $lev1;
         $this->lev2 = $lev2;
         $this->maxLev1 = 0;
@@ -79,14 +86,12 @@ abstract class SidebarTpl
         </div>';
     }
 
-
     /**
-     * Start level1 of the menu
-     *
      * @param string $target
      * @param string $fa
      * @param int    $lev1
      * @param string $txt
+     * @param string $url
      *
      * @return string
      */
@@ -160,7 +165,7 @@ abstract class SidebarTpl
      */
     protected function makeLev2(int $lev2, string $url, string $txt): string
     {
-        $urlFull = Url::makeUrl($url);
+        $urlFull = $this->url->makeUrl($url);
         $html = '<li class="';
         if (($this->lev1 == $this->maxLev1) && ($this->lev2 == $lev2)) {
             $html .= 'active';

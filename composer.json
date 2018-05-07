@@ -12,7 +12,7 @@
   ],
   "autoload":{
     "psr-4":{
-      "qFW\\": ""
+      "qFW\\": "src/"
     }
   },
   "autoload-dev":{
@@ -21,11 +21,13 @@
     }
   },
   "required":{
-    "php": ">=7.2.0"
+    "php": ">=7.2.0",
+    "php-amqplib/php-amqplib": ">=2.6.1"
   },
   "require-dev": {
     "php": ">=7.2.0",
-    "phpunit/phpunit": "^6.5.7",
+    "phpunit/phpunit": "^6.5",
+    "phpunit/php-timer": "^1.0.9",
     "phpunit/php-invoker": "^1.1",
     "phpunit/dbunit": "^3.0",
     "phing/phing": "2.*",
@@ -38,7 +40,9 @@
     "symfony/yaml": "v3.3.14",
     "wimg/php-compatibility": "*",
     "dealerdirect/phpcodesniffer-composer-installer": "*",
-    "object-calisthenics/phpcs-calisthenics-rules": "*"
+    "object-calisthenics/phpcs-calisthenics-rules": "*",
+    "php-amqplib/php-amqplib": ">=2.6.1"
+
   },
   "prefer-stable" : true,
   "config": {

@@ -17,7 +17,6 @@ namespace qFW\mvc\view\form\elements\input;
  */
 class InputDateTimeLocal implements IFormInput
 {
-
     /**
      * Get type of input
      *

@@ -15,6 +15,7 @@ use qFW\mvc\view\pages\elements\INavbar;
 use qFW\mvc\view\pages\elements\PageEnd;
 use qFW\mvc\view\pages\elements\PageStart;
 use qFW\mvc\view\pages\elements\Sidebar;
+use qFW\mvc\view\template\IFooter;
 use qFW\mvc\view\template\ITplSidebar;
 
 /**
@@ -26,23 +27,23 @@ use qFW\mvc\view\template\ITplSidebar;
  */
 final class PanelPage extends PanelHtmlDoc
 {
-
     /**
      * PanelPage constructor.
      *
      * @param string $title
-     * @param string $del "\n", space, ...
-     * @param string $skinPath
+     * @param string $skinPath default = ''
      */
-    public function __construct(string $title, string $del, string $skinPath)
+    public function __construct(string $title, string $skinPath = '')
     {
         $this->title = $title;
-        $this->del = $del;
 
-        $skin = "<link rel='stylesheet' type='text/css' href='$skinPath' />";
-        parent::__construct(new PageStart($title, $del, $skin), new PageEnd());
+        if ($skinPath != '') {
+            $skin = "<link rel='stylesheet' type='text/css' href='$skinPath' />";
+        } else {
+            $skin = '';
+        }
+        parent::__construct(new PageStart($title, $skin), new PageEnd());
     }
-
 
     /**
      * Set navbar
@@ -78,15 +79,25 @@ final class PanelPage extends PanelHtmlDoc
         $this->content .=
             $content->getBreadCrumb();
         if ($_SESSION['err'] != '') {
-            $this->content .= "<div class='alert alert-danger'><strong>Attenzione! </strong> {$_SESSION['err']}.</div>";
+            $this->content .= "<div class='alert alert-danger'>{$_SESSION['err']}.</div>";
         }
         if ($_SESSION['mex'] != '') {
-            $this->content .= "<div class='alert alert-success'><strong>Bene! </strong> {$_SESSION['mex']}.</div>";
+            $this->content .= "<div class='alert alert-success'><strong>{$_SESSION['mex']}.</div>";
         }
         $this->content .=
             "<h1>$this->title</h1>" .
             $content->getHtml();
         return $this;
+    }
+
+    /**
+     * @param \qFW\mvc\view\template\IFooter $footer
+     *
+     * @return mixed|void
+     */
+    public function setFooter(IFooter $footer)
+    {
+        $this->footer = $footer->getHtml();
     }
 
     /**

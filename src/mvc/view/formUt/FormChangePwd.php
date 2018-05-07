@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace qFW\mvc\view\formUt;
 
 use qFW\log\HtmlName;
+use qFW\mvc\controller\lang\ILang;
 use qFW\mvc\view\form\elements\FormInput;
 use qFW\mvc\view\form\elements\FormText;
 use qFW\mvc\view\form\elements\FormTitle;
@@ -22,19 +23,36 @@ use qFW\mvc\view\form\FormObjBuilder;
 use qFW\mvc\view\form\FormPage;
 
 /**
- * Class FormCambiaPwd
+ * Class FormChangePwd
  *
  * @package qFW\mvc\view\formUt
  */
-class FormCambiaPwd
+class FormChangePwd
 {
+    /** @var \qFW\mvc\controller\lang\ILang */
+    private $lang;
 
-    public static function frmChangePwd()
+    /**
+     * FormChangePwd constructor.
+     *
+     * @param \qFW\mvc\controller\lang\ILang $lang
+     */
+    public function __construct(ILang $lang)
+    {
+        $this->lang = $lang;
+    }
+
+    /**
+     * @param string $actionPage
+     *
+     * @return string
+     */
+    public function frmChangePwd(string $actionPage)
     {
 
-        $logger = new HtmlName($_SESSION['uid']);
+        $logger = new HtmlName($_SESSION['uid'], $this->lang);
         // @codingStandardsIgnoreStart
-        $page = (new FormPage(' ', $logger))
+        $page = (new FormPage($logger))
             ->addElement((new FormTitle('Cambio password', 2)))
             ->addElement((new FormText('<b>Password attuale*</b>'))
                              ->setElementRowClass('col-xs-12 col-sm-4')
@@ -76,7 +94,8 @@ class FormCambiaPwd
             )
             ->addElement((new FormInput('cambiaPassword', new InputSubmit(), false))
                              ->setValue('Cambia password')
-            );
+            )
+        ;
         // @codingStandardsIgnoreEnd
 
         $formRecipe = (new FormObjBuilder($logger))
@@ -84,9 +103,8 @@ class FormCambiaPwd
             ->build();
 
         $form1 = new FormObj(
-            'formCambiaPwd',
             $formRecipe,
-            '/mvc/controller/pagine/impostazioniAccessoPwdController.php',
+            $actionPage,
             $logger
         );
 

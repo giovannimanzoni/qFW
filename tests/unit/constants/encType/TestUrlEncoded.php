@@ -17,7 +17,7 @@ class TestUrlEncoded extends TestCase
      */
     public function testUrlEncoded()
     {
-        $val= new UrlEncoded();
-        $this->assertEquals('application/x-www-form-urlencoded',$val->getCode());
+        $val = new UrlEncoded();
+        $this->assertEquals('application/x-www-form-urlencoded', $val->getCode());
     }
 }

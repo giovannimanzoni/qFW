@@ -19,37 +19,31 @@ namespace qFW\mvc\view\pages;
  */
 abstract class HtmlDoc
 {
-
-    /** @var string html code delimiter */
-    protected $del = '';
-
-    /** @var string hold first block of html code for this page */
+    /** @var string Hold first block of html code for this page */
     protected $startHtmlDoc;
 
-    /** @var string hold first block of html code for this page */
+    /** @var string Hold first block of html code for this page */
     protected $endHtmlDoc;
 
-    /** @var string hold javascript code */
+    /** @var string Hold javascript code */
     private $endJs = '';
 
-    /** @var string static origin for SEO for static contents. default same server */
+    /** @var string Static origin for SEO for static contents. default same server */
     private $staticOrigin = '';
 
+    /** @var string  Log from template if log engine is Html*/
+    private $log='';
 
     /**
      * HtmlDoc constructor.
      *
      * @param \qFW\mvc\view\pages\IHtml $startHtmlDoc
      * @param \qFW\mvc\view\pages\IHtml $endHtmlDoc
-     * @param string                    $del
      */
     public function __construct(
         IHtml $startHtmlDoc,
-        IHtml $endHtmlDoc,
-        string $del = "\n"
+        IHtml $endHtmlDoc
     ) {
-
-        $this->del = $del;
         $this->startHtmlDoc = $startHtmlDoc->getHtml();
         $this->endHtmlDoc = $endHtmlDoc->getHtml();
     }
@@ -59,8 +53,19 @@ abstract class HtmlDoc
      */
     public function __destruct()
     {
+        $_SESSION['mex']='';
         $_SESSION['err']='';
-        $_SESSION['err']='';
+    }
+
+    /**
+     * @param string $log
+     *
+     * @return $this
+     */
+    public function showLog(string $log)
+    {
+        $this->log= "$log";
+        return $this;
     }
 
     /**
@@ -69,7 +74,6 @@ abstract class HtmlDoc
      */
     public function render()
     {
-
         $start=str_replace('STATIC_ORIGIN', $this->staticOrigin, $this->startHtmlDoc);
         $body=str_replace('STATIC_ORIGIN', $this->staticOrigin, $this->makeBody());
         $end=str_replace('STATIC_ORIGIN', $this->staticOrigin, $this->endJs());
@@ -77,6 +81,7 @@ abstract class HtmlDoc
 
         $html = $start
             . $body
+            . $this->log
             . $end
             . $this->endHtmlDoc
             . $this->closeHtmlDoc();

@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace qFW\mvc\view\form\elements;
 
+use qFW\mvc\controller\lang\ILang;
+use qFW\mvc\controller\vocabulary\Voc;
 use qFW\mvc\view\form\TError;
 use qFW\mvc\view\form\TGlobalAttributes;
 
@@ -22,11 +24,14 @@ use qFW\mvc\view\form\TGlobalAttributes;
  */
 class FormTitle implements IFormElements
 {
-    /** @var string title value */
-    private $value='';
+    /** @var string Title value */
+    private $title = '';
 
-    /** @var int dimension of title */
-    private $dimension=1;
+    /** @var int Dimension of title */
+    private $dimension = 1;
+
+    /** @var \qFW\mvc\controller\vocabulary\Voc */
+    private $voc;
 
     use TError;
     use TGlobalAttributes;
@@ -34,17 +39,18 @@ class FormTitle implements IFormElements
     /**
      * FormTitle constructor.
      *
-     * @param string $value     title string
-     * @param int    $dimension title dimension from 1 to 6
+     * @param string $title
+     * @param int    $dimension
      */
-    public function __construct(string $value, int $dimension)
+    public function __construct(string $title, int $dimension)
     {
-        $this->value = $value;
+        $this->title = $title;
         $this->dimension = $dimension;
+        $this->voc = new Voc();
     }
 
     /*********************************************************************************************************
-     * metodi definiti nell'interfaccia ma non usati @codingStandardsIgnoreStart
+     *  Methods defined in the interface but not used @codingStandardsIgnoreStart
      ********************************************************************************************************/
 
     /**
@@ -148,7 +154,7 @@ class FormTitle implements IFormElements
     // @codingStandardsIgnoreEnd
 
     /*********************************************************************************************************
-     * metodi opzionali
+     * Optional methods
      ********************************************************************************************************/
 
     /**
@@ -187,26 +193,30 @@ class FormTitle implements IFormElements
         return $this;
     }
 
-    /**********************************************************************************
+    /**
      * Check if this form element has got some errors
      *
-     * @return bool : esito
+     * @return bool : outcome
      */
     public function check(): bool
     {
 
         if (($this->dimension < 1) || ($this->dimension > 6)) {
-            $this->addLog("Titolo '{$this->value}': Dimensione del testo fuori range (1..6) : {$this->dimension}");
+            $this->addLog("'{$this->title}': _VOC_ : {$this->dimension}", $this->voc->formTitleOutOfRange());
+        } else {
+            /*Ok*/
         }
-        if ($this->value == '') {
-            $this->addLog('Testo del titolo vuoto');
+        if ($this->title == '') {
+            $this->addLog('_VOC_', $this->voc->formTitleEmpty());
+        } else {
+            /*Ok*/
         }
 
-        return $this->getCheckEsito();
+        return $this->getCheckOutcome();
     }
 
 
-    /**********************************************************************************
+    /**
      * Make html for this form element
      *
      * @return string   : html
@@ -217,9 +227,13 @@ class FormTitle implements IFormElements
 
         if (!$this->TErrorChecked) {
             $this->check();
+        } else {
+            /*Ok*/
         }
         if ($this->TErrorValid) {
-            $html = "<h{$this->dimension} {$this->getGlobalAttributes()}>{$this->value}</h{$this->dimension}>";
+            $html = "<h{$this->dimension} {$this->getGlobalAttributes()}>{$this->title}</h{$this->dimension}>";
+        } else {
+            /*Ok*/
         }
         return $html;
     }

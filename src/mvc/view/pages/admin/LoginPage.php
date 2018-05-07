@@ -21,26 +21,30 @@ use qFW\mvc\view\template\content\ITplLogin;
  */
 final class LoginPage extends HtmlDoc
 {
-    /** @var string page content */
+    /** @var string Page content */
     private $content = '';
 
     /**
      * LoginPage constructor.
      *
      * @param string $title
-     * @param string $del         "\n", space, ...
-     * @param string $skinPath
+     * @param string $skinPath default ''
      */
-    public function __construct(string $title, string $del, string $skinPath)
+    public function __construct(string $title, string $skinPath = '')
     {
-        $skin = "<link rel='stylesheet' type='text/css' href='$skinPath' />";
-        parent::__construct(new PageStart($title, $del, $skin), new PageEnd());
+        if ($skinPath != '') {
+            $skin = "<link rel='stylesheet' type='text/css' href='$skinPath' />";
+        } else {
+            $skin = '';
+        }
+
+        parent::__construct(new PageStart($title, $skin), new PageEnd());
 
         $this->setStaticOrigin('/static');
     }
 
     /**
-     * make body
+     * Make body
      *
      * @return string
      */
@@ -57,7 +61,7 @@ final class LoginPage extends HtmlDoc
     }
 
     /**
-     * set content
+     * Set content
      *
      * @param \qFW\mvc\view\template\content\ITplLogin $tmpl
      *
@@ -76,19 +80,18 @@ final class LoginPage extends HtmlDoc
      */
     protected function endJs(): string
     {
-        $del = $this->del;
 
         // JQUERY & BOOTSTRAP
-        //jQuery (necessary for Bootstrap\'s JavaScript plugins)
-        return "<script src=\"STATIC_ORIGIN/js/jquery.1.12.4.min.js\"></script> $del"
-            . "<script src=\"STATIC_ORIGIN/js/jquery-ui.min.js\"></script> $del"
-            . "<script src=\"STATIC_ORIGIN/js/bootstrap.3.3.7.min.js\"></script> $del"
+        //jQuery (mandatory for Bootstrap\'s JavaScript plugins)
+        return "<script src=\"STATIC_ORIGIN/js/jquery.1.12.4.min.js\"></script>"
+            . "<script src=\"STATIC_ORIGIN/js/jquery-ui.min.js\"></script>"
+            . "<script src=\"STATIC_ORIGIN/js/bootstrap.3.3.7.min.js\"></script>"
 
-            //tokenfield
-            . "<script src=\"STATIC_ORIGIN/js/bootstrap-tokenfield.min.js\"></script> $del"
+            // Tokenfield
+            . "<script src=\"STATIC_ORIGIN/js/bootstrap-tokenfield.min.js\"></script>"
             //."<script src=\"STATIC_ORIGIN/panel/js/typeahead.bundle.min.js\"></script> $t"
-            . "<script src=\"STATIC_ORIGIN/js/scrollspy.js\"></script> $del"
-            . "<script src=\"STATIC_ORIGIN/js/typeahead.bundle.min.js\"></script> $del"
-            . "<script src=\"STATIC_ORIGIN/js/docs.min.js \"></script> $del";
+            . "<script src=\"STATIC_ORIGIN/js/scrollspy.js\"></script>"
+            . "<script src=\"STATIC_ORIGIN/js/typeahead.bundle.min.js\"></script>"
+            . "<script src=\"STATIC_ORIGIN/js/docs.min.js \"></script>";
     }
 }

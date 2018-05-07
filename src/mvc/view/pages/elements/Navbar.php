@@ -21,25 +21,20 @@ use qFW\mvc\view\template\ITplNavbar;
  */
 final class Navbar implements INavbar
 {
-    /** @var string code delimiter */
-    private $del = '';
-
-    /** @var string  custom logo path */
+    /** @var string Custom logo path */
     private $logoPath = '';
 
-    /** @var string hold html */
+    /** @var string Hold html */
     private $html = '';
 
     /**
      * Navbar constructor.
      *
      * @param \qFW\mvc\view\template\ITplNavbar $templateNavbar
-     * @param string                            $del
      */
-    public function __construct(ITplNavbar $templateNavbar, string $del = "\n")
+    public function __construct(ITplNavbar $templateNavbar)
     {
         $this->html = $templateNavbar->getHtml();
-        $this->del = $del;
     }
 
     /**

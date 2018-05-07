@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace qFW\mvc\model\httpRequest\engine\CurlObj;
 
+use qFW\mvc\controller\lang\ILang;
+use qFW\mvc\controller\vocabulary\Voc;
 use qFW\mvc\model\httpRequest\engine\IEngineObjBuilder;
 use qFW\mvc\model\httpRequest\verbs\Delete;
 use qFW\mvc\model\httpRequest\verbs\Get;
@@ -30,42 +32,48 @@ use qFW\mvc\controller\dataTypes\UtString;
  */
 class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
 {
-    /** hold default user agent */
+    /** @var string  Hold default user agent */
     const DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu 
                                 Chromium/32.0.1700.107 Chrome/32.0.1700.107 Safari/537.36';
 
-    /** hold default reffer */
+    /** @var string  Hold default reffer */
     const DEFAULT_REFFER = 'https://www.google.it';
 
     /** @var  Cookie file */
     private $cookieFile;
 
-    /** @var array hold curl option */
+    /** @var array Hold curl option */
     private $arrOptions = array();
 
     /** @var \qFW\mvc\model\httpRequest\verbs\IVerbs Hold Verb to use */
     private $verb;
 
-    /** @var bool  hold verbose mode */
+    /** @var bool  Hold verbose mode */
     private $verboseResourceHandle = false;
 
-    /** @var array  curl field */
+    /** @var array  Curl field */
     private $fieldArr = array();
 
-    /** @var \qFW\log\LogProxy  hold Log engine */
+    /** @var \qFW\log\LogProxy  Hold Log engine */
     private $loggerEngine;
 
-    /** @var string  url to curl */
+    /** @var string  Url to curl */
     private $url = '';
 
-    /** @var string  http content type */
+    /** @var string  Http content type */
     private $httpContentType = '';
 
-    /** @var string  http accept type */
+    /** @var string  Http accept type */
     private $httpAcceptType = '';
 
-    /** @var array  additional http headers */
+    /** @var array  Additional http headers */
     private $additionalsHttpHeaders = array();
+
+    /** @var \qFW\mvc\controller\vocabulary\Voc */
+    private $voc;
+
+    /** @var \qFW\mvc\controller\dataTypes\UtString */
+    private $utStr;
 
     //Observe
     /** @var array hold object to observe */
@@ -99,12 +107,12 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
     }
 
     /**
-     * call observed object function
+     * Call observed object function
      */
     public function notify()
     {
         foreach ($this->observers as $value) {
-            $value->update($this); // metodo dell'oggetto che osserva
+            $value->update($this); // Method of the object that observes
         }
     }
 
@@ -120,15 +128,21 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
      * @param \qFW\log\ILogOutput                     $outputLog
      * @param string                                  $contentType Http Content Type
      * @param string                                  $acceptType  Http Accept Type
+     * @param \qFW\mvc\controller\lang\ILang          $lang
      */
     public function __construct(
         string $url,
         IVerbs $verb,
         ILogOutput $outputLog,
         string $contentType,
-        string $acceptType
+        string $acceptType,
+        ILang $lang
     ) {
-        // init log engine
+
+        $this->utStr = new UtString($lang);
+        $this->voc = new Voc();
+
+        // Init log engine
         $this->loggerEngine = new LogProxy($outputLog);
 
         $this->url = $url;
@@ -142,21 +156,21 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
         $this->setUserAgent(self::DEFAULT_USER_AGENT);
         $this->setOption(CURLOPT_TIMEOUT, 60);
         $this->setOption(CURLOPT_CONNECTTIMEOUT, 60);
-        $this->setOption(CURLOPT_RETURNTRANSFER, true); // evito che il contenuto remoto venga passato a print
+        $this->setOption(CURLOPT_RETURNTRANSFER, true); // Avoid the remote content being passed to print
         $this->setOption(CURLOPT_SSL_VERIFYPEER, false);
         $this->setOption(CURLOPT_SSL_VERIFYHOST, false);
-        $this->setOption(CURLOPT_FOLLOWLOCATION, true); // segue redirect HTTP 3xx.
+        $this->setOption(CURLOPT_FOLLOWLOCATION, true); // Follow redirect HTTP 3xx.
 
         $this->setOption(CURLOPT_DNS_USE_GLOBAL_CACHE, false);
         $this->setOption(CURLOPT_DNS_CACHE_TIMEOUT, 2);
 
-        $this->setOption(CURLOPT_HEADER, true); // do not print header in curl get
+        $this->setOption(CURLOPT_HEADER, true); // Do not print header in curl get
 
-        // outgoing headers are available in the array returned by curl_getinfo(), under request_header key
+        // Outgoing headers are available in the array returned by curl_getinfo(), under request_header key
         $this->setOption(CURLINFO_HEADER_OUT, true);
 
-        $this->setHttpContentType($contentType);          // init, va impostato
-        $this->setHttpAcceptType($acceptType);            // init, va impostato
+        $this->setHttpContentType($contentType);          // Init, must be set
+        $this->setHttpAcceptType($acceptType);            // Init, must be set
     }
 
     /**
@@ -176,7 +190,7 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
     /**
      * Set the parameters to send with curl request
      *
-     * @param array $arr list of parameters, they will be encoded by selected encoding format
+     * @param array $arr List of parameters, they will be encoded by selected encoding format
      *
      * @return $this
      */
@@ -185,7 +199,6 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
         $this->fieldArr = $arr;
         return $this;
     }
-
 
     /**
      * Set the http content type. Content types are too many and can not be foreseen
@@ -238,7 +251,7 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
         if ($this->check()) {
 
             /*************************************
-             * headers
+             * Headers
              ************************************/
 
             $headers = array();
@@ -265,20 +278,20 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
             $this->setOption(CURLOPT_HTTPHEADER, $headers);
 
             /*************************************
-             * altre opzioni curl
+             * Other curl options
              ************************************/
-            // set content type -
+            // Set content type -
             //  https://stackoverflow.com/questions/23714383/what-are-all-the-possible-values-for-http-content-type-header
             switch ($this->verb->getName()) {
                 case (new Post())->getName():
-                    if (UtString::strSearch($hCT, 'json')) {
+                    if ($this->utStr->strSearch($hCT, 'json')) {
                         $data = json_encode($this->fieldArr);
                         $this->setOption(CURLOPT_POSTFIELDS, $data);
-                    } elseif (UtString::strSearch($hCT, 'urlencoded')) {
+                    } elseif ($this->utStr->strSearch($hCT, 'urlencoded')) {
                         $data = http_build_query($this->fieldArr);
                         $this->setOption(CURLOPT_POSTFIELDS, $data);
                     } else {
-                        $this->addLog('build(): questa modalità httpHeader non è implementata.');
+                        $this->addLog('_VOC_', $this->voc->curlHttpHeaderNotIMplemented());
                     }
                     $this->setOption(CURLOPT_URL, $this->url);
                     break;
@@ -288,17 +301,19 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
                                                 http_build_query($this->fieldArr));
                     break;
 
-                case (new Delete())->getName():
-                case (new Put())->getName():
+                case (new Delete())->getName(): // @todo develop
+                case (new Put())->getName():    // @todo develop
                 default:
-                    //come si imposta ?
                     //$this->setOption(CURLOPT_URL, $this->url . '?'. http_build_query($this->fieldArr) );
-                    $this->addLog('build(): verbo non implementato.');
+                    $this->addLog('build(): Not implemented.');
                     break;
             }
 
             $this->notify();
+        } else {
+            /*Ok*/
         }
+
         return $this;
     }
 
@@ -309,15 +324,12 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
      */
     private function check(): bool
     {
+        //if (! is_rsource($this->cookieFile)) $this->addLog('Cookiefile is not a resource.'); // False error on file ?
 
-        //if (! is_resource($this->cookieFile)) $this->addLog('Cookiefile non è una risorsa.');
-        //  falso errore sui file?
         if (is_null($this->verb)) {
-            $this->addLog('Verbo non impostato.');
-        }
-
-        if ($this->httpHeaderMode = '') {
-            $this->addLog('httpheader mode non impostato.');
+            $this->addLog('_VOC_', $this->voc->curlVerbNotSet());
+        } else {
+            /*Ok*/
         }
 
         return $this->checkValid();
@@ -330,16 +342,18 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
      */
     private function checkValid(): bool
     {
-        $esito = true;
+        $res = true;
         if ($this->loggerEngine->getLogsQty()) {
-            $esito = false;
+            $res = false;
+        } else {
+            /*Ok*/
         }
 
-        return $esito;
+        return $res;
     }
 
     /************************************************
-     * OPZIONALI x la costruzione
+     * Optionals for setup
      ***********************************************/
 
     /**
@@ -377,9 +391,9 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
                 $this->setOption(CURLOPT_CUSTOMREQUEST, null);
                 $this->setOption(CURLOPT_HTTPGET, true);
 
-                // questi non dovrebbero servire, il comando sopra resetta curl a richieste di tipo Get
-                //$this->setOption(CURLOPT_POST,0);
-                // get default per curl, non serve impostare header specifici
+                // Follow commands should not serve, the above command resets curl to Get requests
+                //    $this->setOption(CURLOPT_POST,0);
+                // GET mode is default for curl, you do not need to set specific headers
                 break;
 
             case Delete::getName():
@@ -389,7 +403,7 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
                 break;
 
             default:
-                $this->addLog('setVerb(): Verbo non implementato.');
+                $this->addLog('setVerb(): Verb not implemented.');
                 break;
         }
 
@@ -406,10 +420,10 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
     public function setUserAgent(string $userAgent): CurlObjBuilder
     {
         if ($userAgent == '') {
-            $this->addLog('UserAgent impostato vuoto.');
+            $this->addLog('_VOC_', $this->voc->curlUserAgentEmpty());
         } else {
             $this->setOption(CURLOPT_USERAGENT, $userAgent);
-        } // Imposto uno user-agent in modo arbitrario
+        }
         return $this;
     }
 
@@ -453,7 +467,7 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
         if ($verbose) {
             $this->verboseResourceHandle = fopen('php://temp', 'w+');
             if ($this->verboseResourceHandle == false) {
-                $this->addLog('Impossibile impostare modalità verbose.');
+                $this->addLog('_VOC_', $this->voc->curlVerboseErr());
             }
 
             $this->arrOptions[CURLOPT_VERBOSE] = true;
@@ -486,7 +500,7 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
     }
 
     /************************************************
-     * x l'uso dell'oggetto
+     * For the use of the object
      ************************************************/
 
     /**
@@ -498,7 +512,7 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
     {
         $options = $this->arrOptions;
 
-        // una volta ritornate, non serve ritornarle ancora al prossimo curl, ormai l'oggetto curl è stato impostato
+        // Once you return, you do not need to go back to the next curl, the curl object has now been set
         $this->arrOptions = array();
 
         return $options;
@@ -532,9 +546,10 @@ class CurlObjBuilder implements IEngineObjBuilder, \SplSubject
      * Add log to the logger
      *
      * @param string $err
+     * @param string $vocFun
      */
-    private function addLog(string $err)
+    private function addLog(string $err, string $vocFun = '')
     {
-        $this->loggerEngine->log(new LogMessage('', $err));
+        $this->loggerEngine->log(new LogMessage('', $err, $vocFun));
     }
 }

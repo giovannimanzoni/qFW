@@ -22,29 +22,37 @@ interface ILogMessage
     /**
      * ILogMessage constructor.
      *
-     * @param string $type type of log, user defined
-     * @param string $text text to log
+     * @param string $type
+     * @param string $text
+     * @param string $vocFun
      */
-    public function __construct(string $type, string $text);
+    public function __construct(string $type, string $text, string $vocFun);
 
     /**
-     * return log type
+     * Return log type
      *
      * @return string
      */
     public function getType(): string;
 
     /**
-     * return log text
+     * Return log text
      *
      * @return string
      */
     public function getText(): string;
 
     /**
-     * return storing date and time
+     * Return storing date and time
      *
      * @return string
      */
     public function getDate(): string;
+
+    /**
+     * Return vocabulary function name.
+     *
+     * @return string
+     */
+    public function getVocFun(): string;
 }

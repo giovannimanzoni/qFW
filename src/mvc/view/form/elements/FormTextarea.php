@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace qFW\mvc\view\form\elements;
 
+use qFW\mvc\controller\lang\ILang;
+use qFW\mvc\controller\vocabulary\Voc;
 use qFW\mvc\view\form\TError;
 use qFW\mvc\view\form\TGlobalAttributes;
 
@@ -22,21 +24,24 @@ use qFW\mvc\view\form\TGlobalAttributes;
  */
 class FormTextarea implements IFormElements
 {
-    // specific to textarea
-    /** @var bool  hold autofocus property*/
+    // Specific to textarea
+    /** @var bool Hold autofocus property */
     private $autofocus = false;
 
     /** @var bool  hold disabled property */
     private $disabled = false;
 
-    /** @var int  hold max lenght property*/
+    /** @var int Hold max lenght property */
     private $maxLength = 0;
 
-    /** @var bool  hold read only property*/
+    /** @var bool Hold read only property */
     private $readonly = false;
 
-    /** @var int  hold number of column property*/
+    /** @var int Hold number of column property */
     private $rows = 4;
+
+    /** @var \qFW\mvc\controller\vocabulary\Voc */
+    private $voc;
 
     use TError;
     use TFormObj;
@@ -46,17 +51,18 @@ class FormTextarea implements IFormElements
     /**
      * FormTextarea constructor.
      *
-     * @param string $id        user id
-     * @param bool   $required  true if required in form validation
+     * @param string $id       User id
+     * @param bool   $required True if required in form validation
      */
     public function __construct(string $id, bool $required)
     {
         $this->id = $id;
         $this->required = $required;
+        $this->voc = new Voc();
     }
 
     /*********************************************************************************************************
-     * metodi specifici di select-box
+     * Specific methods for select-box
      ********************************************************************************************************/
 
     /**
@@ -94,7 +100,7 @@ class FormTextarea implements IFormElements
     /**
      * Specifies the maximum number of characters allowed in the text area
      *
-     * @param int $val  maximum number of characters allowed
+     * @param int $val Maximum number of characters allowed
      *
      * @return $this
      */
@@ -117,7 +123,7 @@ class FormTextarea implements IFormElements
 
 
     /*********************************************************************************************************
-     * metodi dell'interfaccia IFormElements
+     * Methods of IFormElements interface
      ********************************************************************************************************/
 
     /**
@@ -138,14 +144,18 @@ class FormTextarea implements IFormElements
     public function check(): bool
     {
         if ($this->rows == 0) {
-            $this->addLog("id {$this->id}: Textarea ha impostato 0 righe visibili.");
+            $this->addLog("id {$this->id}: _VOC_", $this->voc->formTextarea0Rows());
+        } else {
+            /*Ok*/
         }
 
         if (!is_numeric($this->maxLength)) {
-            $this->addLog("id {$this->id}: proprietà maxLength impostata di tipo non numerico.");
+            $this->addLog("id {$this->id}: _VOC_", $this->voc->formPropertyMaxLenghtErr());
+        } else {
+            /*Ok*/
         }
 
-        return $this->getCheckEsito();
+        return $this->getCheckOutcome();
     }
 
     /**
@@ -159,32 +169,46 @@ class FormTextarea implements IFormElements
 
         if (!$this->TErrorChecked) {
             $this->check();
+        } else {
+            /*Ok*/
         }
 
         if ($this->TErrorValid) {
             $html .= "<textarea name='{$this->id}' rows='{$this->rows}' ";
             if ($this->required) {
                 $html .= 'required="required" ';
+            } else {
+                /*Ok*/
             }
             if ($this->autofocus) {
                 $html .= 'autofocus="autofocus" ';
+            } else {
+                /*Ok*/
             }
             if ($this->disabled) {
                 $html .= 'disabled="disabled" ';
+            } else {
+                /*Ok*/
             }
             if ($this->maxLength) {
                 $html .= "maxlength='{$this->maxLength}' ";
+            } else {
+                /*Ok*/
             }
             if ($this->readonly) {
                 $html .= 'readonly="readonly" ';
+            } else {
+                /*Ok*/
             }
 
-            // imposta classe di bootstrap + quella eventuale impostata dall'utente
+            // Set bootstrap class + any one set by the user
             $this->setClass("form-control col-xs-{$this->col2} {$this->class} ");
 
             $html .= "{$this->getGlobalAttributes()}>";
             if ($this->defaultText) {
                 $html .= $this->defaultText;
+            } else {
+                /*Ok*/
             }
             $html .= '</textarea>';
         }

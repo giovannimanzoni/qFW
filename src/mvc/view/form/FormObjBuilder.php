@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace qFW\mvc\view\form;
 
 use qFW\log\ILogOutput;
+use qFW\mvc\controller\lang\ILang;
+use qFW\mvc\controller\vocabulary\Voc;
 
 /**
  * Class FormObjBuilder
@@ -21,20 +23,24 @@ use qFW\log\ILogOutput;
  */
 class FormObjBuilder implements IFormObjBuilder
 {
-    /** @var array  hold all pages of the form*/
+    /** @var array Hold all pages of the form */
     private $formPages = array();
 
-    /** @var string  symbol to use to mark form elements as required in label description*/
+    /** @var string Symbol to use to mark form elements as required in label description */
     private $requiredSimbol = '*';
 
-    /** @var string string to use to explain that marked elements are required */
-    private $requiredString = ' = campo obbligatorio.';
+    /** @var string String to use to explain that marked elements are required */
+    private $requiredString = '';
+
+    /** @var \qFW\mvc\controller\vocabulary\Voc */
+    private $voc;
 
     use TError;
 
     /***********************************
-     * popolamento del form
+     * Populating the form
      **********************************/
+
     /**
      * FormObjBuilder constructor.
      *
@@ -42,11 +48,13 @@ class FormObjBuilder implements IFormObjBuilder
      */
     public function __construct(ILogOutput $outputLog)
     {
+        $this->voc = new Voc();
         $this->createLogger($outputLog);
+        $this->requiredString = ' = required field.';
     }
 
     /***********************************
-     * pagine
+     * Pages
      **********************************/
 
     /**
@@ -60,7 +68,7 @@ class FormObjBuilder implements IFormObjBuilder
     {
         $pageName = $page->getPageName();
         if (array_key_exists($pageName, $this->formPages)) {
-            $this->addLog("Aggiunta pagina con nome già presente: $pageName.");
+            $this->addLog("_VOC_ $pageName.", $this->voc->formPageExist());
         } else {
             $this->formPages[$pageName] = $page;
         }
@@ -93,9 +101,8 @@ class FormObjBuilder implements IFormObjBuilder
         return $page->getPageName();
     }
 
-
     /***********************************
-     * elementi
+     * Form elements
      **********************************/
 
     /**
@@ -112,7 +119,7 @@ class FormObjBuilder implements IFormObjBuilder
         if (array_key_exists($pageName, $this->formPages)) {
             $ret = $this->getPageElements($this->formPages[$pageName]);
         } else {
-            $this->addLog("La pagina $pageName non eiste.");
+            $this->addLog("_VOC_ $pageName.", $this->voc->formPageNotExist());
         }
 
         return $ret;
@@ -140,7 +147,7 @@ class FormObjBuilder implements IFormObjBuilder
         $numPagine = count($this->formPages);
 
         if ($numPagine == 0) {
-            $this->addLog('Form has got no pages.');
+            $this->addLog('__VOC_', $this->voc->formHasNoPages());
         }
 
         return $this;
@@ -153,11 +160,11 @@ class FormObjBuilder implements IFormObjBuilder
      */
     public function check(): bool
     {
-        return $this->getCheckEsito();
+        return $this->getCheckOutcome();
     }
 
     /***********************************
-     * proprietà del form
+     * Properties of the form
      **********************************/
 
     /**

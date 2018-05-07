@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace qFW\mvc\controller\form;
 
 use qFW\mvc\controller\dataTypes\UtString;
+use qFW\mvc\controller\lang\ILang;
 use qFW\mvc\controller\url\Sanitize;
 use qFW\mvc\model\cf\CodiceFiscale;
 use qFW\mvc\model\cf\ICodiceFiscale;
@@ -22,21 +23,43 @@ use qFW\mvc\model\cf\ICodiceFiscale;
  */
 class UtFormData
 {
+    /** @var \qFW\mvc\controller\dataTypes\UtString */
+    private $utStr;
+
+    /** @var \qFW\mvc\controller\lang\ILang */
+    private $lang;
+
+    /** @var \qFW\mvc\controller\url\Sanitize */
+    private $sanitize;
 
     /**
+     * UtFormData constructor.
+     *
+     * @param \qFW\mvc\controller\lang\ILang $lang
+     */
+    public function __construct(ILang $lang)
+    {
+        $this->lang = $lang;
+        $this->utStr = new UtString($lang);
+        $this->sanitize = new Sanitize();
+    }
+
+    /**
+     * Validate array of italian personal id card number
+     *
      * @param array $arrCf
      *
      * @return bool
      * @throws \Exception
      */
-    public static function areCf(array $arrCf): bool
+    public function areCf(array $arrCf): bool
     {
         $valid = true;
-        $codeCf = new CodiceFiscale();
+        $codeCf = new CodiceFiscale($this->lang);
 
         foreach ($arrCf as $cf) {
             $codeCf->setCF($cf);
-            $valid &= self::validateCf($codeCf);
+            $valid &= $this->validateCf($codeCf);
         }
 
         return (bool)$valid;
@@ -47,9 +70,9 @@ class UtFormData
      *
      * @return bool
      */
-    public static function validateCf(ICodiceFiscale $cf)
+    public function validateCf(ICodiceFiscale $cf)
     {
-        return $cf->getCodiceValido();
+        return $cf->getValidCode();
     }
 
 
@@ -58,12 +81,12 @@ class UtFormData
      *
      * @return bool
      */
-    public static function areNotEmpty(array $notEmpty): bool
+    public function areNotEmpty(array $notEmpty): bool
     {
         $valid = true;
 
         foreach ($notEmpty as $val) {
-            $valid &= self::validateNotEmpty($val);
+            $valid &= $this->validateNotEmpty($val);
         }
 
         return (bool)$valid;
@@ -74,7 +97,7 @@ class UtFormData
      *
      * @return bool
      */
-    public static function validateNotEmpty($val)
+    public function validateNotEmpty($val)
     {
         if ($val != '') {
             $ret = true;
@@ -85,16 +108,16 @@ class UtFormData
     }
 
     /**
-     * @param array $numeri
+     * @param array $numbers
      *
      * @return bool
      */
-    public static function areNumbers(array $numeri): bool
+    public function areNumbers(array $numbers): bool
     {
         $valid = true;
 
-        foreach ($numeri as $numero) {
-            $valid &= self::validateNumero($numero);
+        foreach ($numbers as $number) {
+            $valid &= $this->validateNumber($number);
         }
 
         return (bool)$valid;
@@ -105,12 +128,12 @@ class UtFormData
      *
      * @return bool
      */
-    public static function areDate(array $date): bool
+    public function areDate(array $date): bool
     {
         $valid = true;
 
         foreach ($date as $data) {
-            $valid &= self::validateDate($data);
+            $valid &= $this->validateDate($data);
         }
 
         return (bool)$valid;
@@ -121,12 +144,12 @@ class UtFormData
      *
      * @return bool
      */
-    public static function areIds(array $ids): bool
+    public function areIds(array $ids): bool
     {
         $valid = true;
 
         foreach ($ids as $id) {
-            $valid &= self::validateId($id);
+            $valid &= $this->validateId($id);
         }
 
         return (bool)$valid;
@@ -137,47 +160,45 @@ class UtFormData
      *
      * @return bool
      */
-    public static function validateId(int $num): bool
+    public function validateId(int $num): bool
     {
 
         if ($num > 0) {
             $ret = true;
         } else {
             $ret = false;
-        } // non valido id nel database == a 0
+        } // 0 is not a valid id in MySQL database
 
         return $ret;
     }
 
-
-// https://stackoverflow.com/questions/19271381/correctly-determine-if-date-string-is-a-valid-date-in-that-format
-
     /**
      * @param string $date
+     * -> https://stackoverflow.com/questions/19271381/correctly-determine-if-date-string-is-a-valid-date-in-that-format
      *
      * @return bool
      */
-    public static function validateDate(string $date): bool
+    public function validateDate(string $date): bool
     {
         $valid = true;
 
         if (!is_null($date)) {
             $d = \DateTime::createFromFormat('d/m/Y', $date);
             $valid = ($d && $d->format('d/m/Y') === $date);
-        } else { /* data = non disponibile */
+        } else { /* data = not available */
         }
 
         return (bool)$valid;
     }
 
     /**
-     * @param $numero
+     * @param $number
      *
      * @return bool
      */
-    public static function validateNumero($numero): bool
+    public function validateNumber($number): bool
     {
-        return (bool)is_numeric($numero);
+        return (bool)is_numeric($number);
     }
 
     /**
@@ -185,7 +206,7 @@ class UtFormData
      *
      * @return bool
      */
-    public static function areText(array $text): bool
+    public function areText(array $text): bool
     {
         $valid = true;
 
@@ -203,19 +224,19 @@ class UtFormData
      *
      * @return bool
      */
-    public static function areIps(array $ips): bool
+    public function areIps(array $ips): bool
     {
         $valid = true;
 
         foreach ($ips as $ip) {
-            // se ip contiene piu ip separati da '|'
-            if (UtString::strSearch($ip, '|')) {
+            // If IP contains more ips separated by '|'
+            if ($this->utStr->strSearch($ip, '|')) {
                 $arrExpl = explode('|', $ip);
                 foreach ($arrExpl as $part) {
-                    $valid &= self::isIp($part);
+                    $valid &= $this->isIp($part);
                 }
             } else {
-                $valid &= self::isIp($ip);
+                $valid &= $this->isIp($ip);
             }
         }
 
@@ -227,28 +248,30 @@ class UtFormData
      *
      * @return bool
      */
-    public static function arePaths(array $paths): bool
+    public function arePaths(array $paths): bool
     {
         $valid = true;
 
         foreach ($paths as $path) {
-            $valid &= self::isPath($path);
+            $valid &= $this->isPath($path);
         }
 
         return (bool)$valid;
     }
 
     /**
+     * Check if is an array of network ports
+     *
      * @param array $ports
      *
      * @return bool
      */
-    public static function arePorts(array $ports): bool
+    public function arePorts(array $ports): bool
     {
         $valid = true;
 
         foreach ($ports as $porta) {
-            $valid &= self::isPort($porta);
+            $valid &= $this->isPort($porta);
         }
 
         return (bool)$valid;
@@ -256,49 +279,114 @@ class UtFormData
 
     /**
      * @param array $urls
+     * @param bool  $testCurl
      *
      * @return bool
+     * @throws \Exception
      */
-    public static function areUrls(array $urls): bool
+    public function areUrls(array $urls, bool $testCurl = true): bool
     {
         $valid = true;
         foreach ($urls as $url) {
-            $valid &= self::isUrl($url);
+            $valid &= $this->isUrl($url, $testCurl);
         }
         return (bool)$valid;
     }
 
+
     /**
      * @param string $url
+     * @param bool   $testCurl
      *
      * @return bool
+     * @throws \Exception
      */
-    public static function isUrl(string $url): bool
+    public function isUrl(string $url, bool $testCurl = true): bool
     {
-        $exist = Sanitize::isValidUrl($url);
-        if (!$exist) {
-            $_SESSION['err'] .= "Il dominio $url non esiste.";
-        } else {/*ok*/
-        }
-        return $exist;
+        return $this->sanitize->isValidUrl($url, $testCurl);
     }
+
+    /**
+     * @param array $emails
+     * @param bool  $testCurl
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    public function areEmails(array $emails, bool $testCurl = true): bool
+    {
+        $urlEmailArr = array();
+        $valid = true;
+
+        // Extract all email domain
+        foreach ($emails as $urlEmail) {
+            // Email has got only one @ ?
+            $urlEmailTmp = explode('@', $urlEmail, 2);
+            if (count($urlEmailTmp) != 2) {
+                $valid = false;
+                break;
+            }
+
+            // Does this email have got a new domain ?
+            if (!array_key_exists($urlEmailTmp, $urlEmailArr)) {
+                $urlEmailArr[$urlEmailTmp] = true;
+            } else {
+                /*ok It has already been found */
+            }
+        }
+
+        if ($valid) {
+            foreach ($urlEmailArr as $urlEmail) {
+                $valid &= $this->isUrl("http://$urlEmail", $testCurl);
+                if (!$valid) {
+                    break;
+                } // break because check if url is a valid domain is a high load task
+            }
+        }
+
+        return (bool)$valid;
+    }
+
+    /**
+     * Chech if
+     * - there is only one @
+     * - domain url is a valid domain
+     *
+     * @param string $email
+     * @param bool   $testCurl
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    public function isEmail(string $email, bool $testCurl = true): bool
+    {
+        $ret = false;
+
+        $urlEmailTmp = explode('@', $email, 2);
+        if (count($urlEmailTmp) == 2) {
+            $urlEmail = "http://{$urlEmailTmp[1]}";
+            $ret = $this->isUrl($urlEmail, $testCurl);
+        }
+
+        return $ret;
+    }
+
 
     /**
      * @param string $ip
      *
      * @return bool
      */
-    public static function isIp(string $ip): bool
+    public function isIp(string $ip): bool
     {
         $valid = false;
 
-        // se ci sono solo 3 '.'
-        if (UtString::areEqual('localhost', $ip)) {
+        if ($this->utStr->areEqual('localhost', $ip)) {
             $valid = true;
-        } elseif (UtString::strCount($ip, ".") == 3) {
+        } elseif ($this->utStr->strCount($ip, ".") == 3) { // If there are only three '.'
             $partialValid = 0;
 
-            // esplode per '.' e controlla che ogni gruppo sia numerico e compresto tra 0 e 255
+            // Explode by '.' and check every group is numeric and from 0 to 255
             $arrExpl = explode('.', $ip, 4);
             foreach ($arrExpl as $part) {
                 if (is_numeric($part)) {
@@ -310,9 +398,11 @@ class UtFormData
                 }
             }
 
-            // se i 4 gruppi di numeri sono validi
+            // If all 4 groups are valid
             if ($partialValid == 4) {
                 $valid = true;
+            } else {
+                /*Ok, false*/
             }
         }
 
@@ -324,13 +414,13 @@ class UtFormData
      *
      * @return bool
      */
-    public static function isPath(string $path): bool
+    public function isPath(string $path): bool
     {
         $valid = false;
 
-        if ((substr($path, -1) == '/') && (!UtString::strSearch($path, ':'))) {
+        if ((substr($path, -1) == '/') && (!$this->utStr->strSearch($path, ':'))) {
             $valid = true;
-        } else {/*ok false*/
+        } else {/*Ok false*/
         }
         return $valid;
     }
@@ -340,7 +430,7 @@ class UtFormData
      *
      * @return bool
      */
-    public static function isPort($porta): bool
+    public function isPort($porta): bool
     {
         $valid = false;
 
@@ -349,9 +439,9 @@ class UtFormData
                 if (($porta)) {
                     $valid = true;
                 }
-            } else {/*ok false*/
+            } else {/*Ok false*/
             }
-        } else {/*ok false*/
+        } else {/*Ok false*/
         }
         return $valid;
     }

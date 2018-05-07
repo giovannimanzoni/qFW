@@ -13,6 +13,7 @@ namespace qFW\log\Sql;
 use qFW\log\ALogger;
 use qFW\log\ILogMessage;
 use qFW\log\ILogger;
+use qFW\mvc\controller\lang\ILang;
 
 /**
  * Class Sql
@@ -23,31 +24,30 @@ use qFW\log\ILogger;
  */
 class Sql extends ALogger implements ILogger
 {
-    /** @var string table to log on */
+    /** @var string Table to log on */
     private $table = '';
 
-    /** @var int user id */
+    /** @var int User id */
     private $userId = 0;
 
-    /** @var string url that generate the log*/
+    /** @var string Url that generate the log*/
     private $url = '';
 
-    /** @var string client IP that generate the log*/
+    /** @var string Client IP that generate the log*/
     private $clientIp='';
 
     /**
      * Sql constructor.
      *
-     * Override method in abstract class ALogger
-     *
-     * @param $uid  : user id who make logs
+     * @param        $uid
+     * @param string $lang
      */
-    public function __construct($uid)
+    public function __construct($uid, string $lang)
     {
-        parent::__construct($uid);
+        parent::__construct($uid, $lang);
 
-        $this->userId = $uid;                     // user loggato al sito che fa generare l'errore
-        $this->clientIp = $_SERVER['REMOTE_ADDR'];  // ip dell'utente che ha generato l'errore
+        $this->userId = $uid;                       // Save logged user that could generate the error
+        $this->clientIp = $_SERVER['REMOTE_ADDR'];  // Save users's IP
     }
 
     /**
@@ -58,8 +58,8 @@ class Sql extends ALogger implements ILogger
      */
     public function init(string $table, string $path)
     {
-        $this->table = $table;                    // table su cui loggare
-        $this->url = $path;                      // url che genera l'errore
+        $this->table = $table;                    // Table in witch the logg will be saved
+        $this->url = $path;                       // Url that generates the error
 
         // @todo init SQL ?
     }
@@ -73,11 +73,12 @@ class Sql extends ALogger implements ILogger
     {
         $html = '<ul>';
 
-        foreach ($this->logArray as $line) {
+        foreach ($_SESSION['ALOGGER'] as $line) {
             $html .= "<li>{$line->date} : {$line->type} | {$line->text}</li>";
         }
 
         $html .= '</ul>';
+        unset($_SESSION['ALOGGER']);
         return $html;
     }
 
@@ -85,6 +86,8 @@ class Sql extends ALogger implements ILogger
      * Log message in SQL table.
      *
      * Override method in abstract class ALogger
+     *
+     * @fixme: not work
      *
      * @see ALogger::log()
      * @param \qFW\log\ILogMessage $log
@@ -95,16 +98,16 @@ class Sql extends ALogger implements ILogger
     {
         parent::log($log);
 
-        // @todo connect to SQL
+        // @todo Connect to SQL
 
         // save in sql
-        // @todo:  add all constants and variables, stack call
-        // @fixme: not work
+        // @todo:  Add all constants and variables, stack call
+        // @fixme: Not work
 
         // $_GET, $_POST, $_COOKIE, $_REQUEST, $_ENV, $_SERVER, $_SESSION
         sqlAdd(
             $this->table,
-            $this->logArray['uid'],
+            $_SESSION['ALOGGER']['uid'],
             $log->getType(),
             $log->getText(),
             $this->url,

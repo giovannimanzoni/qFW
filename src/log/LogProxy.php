@@ -19,7 +19,7 @@ namespace qFW\log;
  */
 class LogProxy
 {
-    /** @var  object of logger engine */
+    /** @var  Object of logger engine */
     protected $instance;
 
     /**
@@ -29,16 +29,16 @@ class LogProxy
      */
     public function __construct(ILogOutput $output)
     {
-        $class =  $output->getName();
-
-        $this->instance = new $class($output->getUid());
+        $class = $output->getName();
+        $lang = $output->getLang();
+        $this->instance = new $class($output->getUid(), $lang->getLang());
     }
 
     /**
      * Magic method for call function on proxyed logger class
      *
-     * @param string $name      function name
-     * @param array  $arguments arguments
+     * @param string $name      Function name
+     * @param array  $arguments Arguments
      *
      * @return mixed
      */

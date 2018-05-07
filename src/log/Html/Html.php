@@ -32,14 +32,20 @@ class Html extends ALogger implements ILogger
     {
         $html = '';
 
-        if (array_key_exists('logs', $this->logArray)) {
+        if (array_key_exists('logs', $_SESSION['ALOGGER'])) {
+            $vocLang = 'qFW\mvc\controller\vocabulary\Voc' . $this->lang;
+
+            $this->voc = new $vocLang();
+
             $html .= '<ul>';
 
-            foreach ($this->logArray['logs'] as $line) {
+            foreach ($_SESSION['ALOGGER']['logs'] as $line) {
                 $html .= $this->formatLogRow($line);
             }
 
             $html .= '</ul>';
+
+            unset($_SESSION['ALOGGER']);
         } else {
             $html = 'No errors to show.';
         }
@@ -58,6 +64,14 @@ class Html extends ALogger implements ILogger
      */
     private function formatLogRow(ILogMessage $log)
     {
-        return "<li>{$log->getDate()} : {$log->getType()} | {$log->getText()}</li>";
+        $vocFun = $log->getVocFun();
+        if ($vocFun != '') {
+            $funText = $this->voc->$vocFun();
+            $text = str_replace('_VOC_', $funText, $log->getText());
+        } else {
+            $text = $log->getText();
+        }
+
+        return "<li>{$log->getDate()} : {$log->getType()} | {$text}</li>";
     }
 }

@@ -18,6 +18,13 @@ namespace qFW\mvc\controller\dataTypes;
 class UtNumbers
 {
     /**
+     * UtNumbers constructor.
+     */
+    public function __construct()
+    {
+    }
+
+    /**
      * Return float from given argument
      *
      * @param $mixed
@@ -25,10 +32,10 @@ class UtNumbers
      * @return float
      * @throws \Exception
      */
-    public static function getCleanFloat($mixed): float
+    public function getCleanFloat($mixed): float
     {
 
-        // se stringa, cambia virgola in punto
+        // If string, change ',' in '.'
         if (is_string($mixed)) {
             $tmp = str_replace(',', '.', $mixed);
             $cleanFloat = floatval($tmp);
@@ -49,7 +56,7 @@ class UtNumbers
                 }
             }
 
-            throw new \Exception("Impossibile trasformare $str in float");
+            throw new \Exception("getCleanFloat() Impossible convert $str to float");
         }
 
         return $cleanFloat;
@@ -64,7 +71,7 @@ class UtNumbers
      *
      * @return int
      */
-    public static function getCleanInt($mixed): int
+    public function getCleanInt($mixed): int
     {
         if (is_numeric($mixed)) {
             if (!is_int($mixed)) {
@@ -87,19 +94,19 @@ class UtNumbers
      * @return bool
      * @throws \Exception
      */
-    public static function getCleanBool($mixed): bool
+    public function getCleanBool($mixed): bool
     {
 
         if (is_bool($mixed)) {
             $cleanBool = $mixed;
         } else {
-            $int = self::getCleanInt($mixed);
+            $int = $this->getCleanInt($mixed);
             if ($int == 1) {
                 $cleanBool = true;
             } elseif ($int == 0) {
                 $cleanBool = false;
             } else {
-                throw new \Exception('Not boolean argument.');
+                throw new \Exception('getCleanBool() Not boolean argument.');
             }
         }
 

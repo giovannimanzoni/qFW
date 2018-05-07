@@ -8,8 +8,10 @@
  */
 declare(strict_types=1);
 
-
 namespace qFW\mvc\controller\dataTypes;
+
+use qFW\mvc\controller\lang\ILang;
+use qFW\mvc\controller\vocabulary\Voc;
 
 /**
  * Class UtDate
@@ -18,9 +20,31 @@ namespace qFW\mvc\controller\dataTypes;
  */
 class UtDate
 {
+    /** @var \qFW\mvc\controller\lang\ILang */
+    private $lang;
+
+    /** @var \qFW\mvc\controller\dataTypes\UtString */
+    private $utStr;
+
+    /** @var \qFW\mvc\controller\vocabulary\Voc */
+    private $voc;
 
     /**
-     * Conversione da tipo data a datetime
+     * UtDate constructor.
+     *
+     * @param \qFW\mvc\controller\lang\ILang $lang
+     */
+    public function __construct(ILang $lang)
+    {
+        $this->lang = $lang;
+        $this->utStr = new UtString($lang);
+
+        $vocLang = 'qFW\mvc\controller\vocabulary\Voc' . $this->lang->getLang();
+        $this->voc = new $vocLang();
+    }
+
+    /**
+     * Convert from 'data' type to 'datetime'
      *
      * -> https://stackoverflow.com/questions/2215354/php-date-format-when-inserting-into-datetime-in-mysql
      *
@@ -28,7 +52,7 @@ class UtDate
      *
      * @return string
      */
-    public static function dateToDatetime(string $data): string
+    public function dateToDatetime(string $data): string
     {
         if ($data != '') {
             $a = strptime($data, '%d/%m/%Y');
@@ -48,71 +72,89 @@ class UtDate
      *
      * @return string
      */
-    public static function dateTimeToDate(string $mysqlDatetime): string
+    public function dateTimeToDate(string $mysqlDatetime): string
     {
         $ret = '';
-        if (($mysqlDatetime != '') && (!UtString::areEqual($mysqlDatetime, '0000-00-00 00:00:00'))) {
+        if (($mysqlDatetime != '') && (!$this->utStr->areEqual($mysqlDatetime, '0000-00-00 00:00:00'))) {
             $euDate = str_replace('/', '-', $mysqlDatetime);
             $ret = date('d/m/Y', strtotime($euDate));
+        } else {
+            /* Ok, Can not convert*/
         }
         return $ret;
     }
 
     /**
-     * Conversion from mysql datetime to european date and time
+     * Convert from mysql datetime to european date and time
      *      with verbose text for today and yesterday
      *
      * @param      $mysqlDatetime
-     * @param bool $verbose if true, output will be verbose
+     * @param bool $verbose
      *
      * @return string
+     * @throws \Exception
      */
-    public static function dateTimeToDateTime($mysqlDatetime, bool $verbose = false): string
+    public function dateTimeToDateTime($mysqlDatetime, bool $verbose = false): string
     {
         $ret = '';
         if (is_string($mysqlDatetime)) {
-            if (($mysqlDatetime != '') && (!UtString::areEqual($mysqlDatetime, '0000-00-00 00:00:00'))) {
+            if ($mysqlDatetime == '') {
+                throw new \Exception('Empty date');
+            }
+
+
+            if (!$this->utStr->areEqual($mysqlDatetime, '0000-00-00 00:00:00')) {
                 $euDate = str_replace('/', '-', $mysqlDatetime);
                 $time = strtotime($euDate);
 
                 $ret = date('d/m/Y H:i:s', $time);
                 if ($verbose) {
-                    //oggi
+                    // Today
                     if (date('Y-m-d') == date('Y-m-d', $time)) {
-                        $ret = 'Oggi alle ' . date('H:i:s', $time);
-                    } //ieri
-                    else {
+                        $ret = $this->voc->todayAt() . date('H:i:s', $time);
+                    } else {
                         if (date('Y-m-d', strtotime('yesterday')) == date('Y-m-d', $time)) {
-                            $ret = 'Ieri alle ' . date('H:i:s', $time);
-                        } else {/*ok, mostra data completa*/
+                            // Yesterday
+                            $ret = $this->voc->yesterdayAt() . date('H:i:s', $time);
+                        } else {/*Ok, show full date*/
                         }
                     }
+                } else {
+                    /*Ok, return non verbose*/
                 }
+            } else {
+                /*Ok, return ''*/
             }
+        } elseif (is_null($mysqlDatetime)) {
+            /* Ok, could be null */
+        } else {
+            throw new \Exception('Variable not string and not null');
         }
         return $ret;
     }
 
     /**
      * Check if range is valid, error if end date comes befor start date
-     *   data in formato gg/mm/aaaa
+     *   date in gg/mm/aaaa format
      *
-     * @param string $dataIniziale
-     * @param string $dataFinale
+     * @param string $initialDate
+     * @param string $finalDate
      *
      * @return bool
      */
-    public static function checkDateRange(string $dataIniziale, string $dataFinale): bool
+    public function checkDateRange(string $initialDate, string $finalDate): bool
     {
-        $esito = false;
+        $res = false;
 
-        $dateStart = strtotime(str_replace('/', '-', $dataIniziale));
-        $dateEnd = strtotime(str_replace('/', '-', $dataFinale));
+        $dateStart = strtotime(str_replace('/', '-', $initialDate));
+        $dateEnd = strtotime(str_replace('/', '-', $finalDate));
         if ($dateEnd > $dateStart) {
-            $esito = true;
+            $res = true;
+        } else {
+            /*Ok, return false*/
         }
 
-        return $esito;
+        return $res;
     }
 
     /**
@@ -121,17 +163,18 @@ class UtDate
      * @param $end
      *
      * @return \DateTime|false
+     * @throws \Exception
      */
-    public static function getDateMax($end)
+    public function getDateMax($end)
     {
-        // se tempo di fine non definito, calcola diff da adesso
+        // If undefined end time, calculate diff from now
         if (is_null($end)) {
             $dateMax = date_create(date('Y-m-d H:i:s'));
         } elseif (is_string($end)) {
             $data = str_replace('/', '-', $end);
             $dateMax = date_create($data);
         } else {
-            die('timeLaps $end non nulla ne stringa'); /*@fixme throw error */
+            throw new \Exception('TimeLaps not null and not string' . var_dump($end));
         }
         return $dateMax;
     }
@@ -146,11 +189,8 @@ class UtDate
      *
      * @return int
      */
-    public static function dateIntervalToSeconds($dataMax, $dataMin): int
+    public function dateIntervalToSeconds($dataMax, $dataMin): int
     {
-        //$reference = new DateTimeImmutable;
-        //$endTime = $reference->add($dateInterval);
-
         return $dataMax->getTimestamp() - $dataMin->getTimestamp();
     }
 
@@ -163,12 +203,12 @@ class UtDate
      * @return string
      * @throws \Exception
      */
-    public static function secondsBetweenDates(string $init, $end): string
+    public function secondsBetweenDates(string $init, $end): string
     {
         $dateMin = self::getDateMax($init);
         $dateMax = self::getDateMax($end);
 
-        return UtString::getCleanString(self::dateIntervalToSeconds($dateMax, $dateMin));
+        return $this->utStr->getCleanString($this->dateIntervalToSeconds($dateMax, $dateMin));
     }
 
     /**
@@ -179,28 +219,28 @@ class UtDate
      * @param int    $secTrigger
      *
      * @return string
+     * @throws \Exception
      */
-    public static function timeLaps(string $init, $end, int $secTrigger): string
+    public function timeLaps(string $init, $end, int $secTrigger): string
     {
-
-
-        $dateMin = self::getDateMax($init);
-        $dateMax = self::getDateMax($end);
+        $dateMin = $this->getDateMax($init);
+        $dateMax = $this->getDateMax($end);
 
         $timeDiff = date_diff($dateMax, $dateMin);
-        $giorni = $timeDiff->format('%d');
-        if ($giorni > 1) {
-            $tempo = "$giorni giorni e ";
-        } elseif ($giorni == 1) {
-            $tempo = '1 giorno e ';
+        $days = $timeDiff->format('%d');
+
+        if ($days > 1) {
+            $time = "$days {$this->voc->daysAnd()}";
+        } elseif ($days == 1) {
+            $time = "1 {$this->voc->dayAnd()}";
         } else {
-            $tempo = '';
+            $time = '';
         }
 
-        $tempo .= $timeDiff->format('%H:%I:%S');
+        $time .= $timeDiff->format('%H:%I:%S');
 
         /***************
-         * bold ?
+         * Bold ?
          ***************/
 
         $seconds = self::dateIntervalToSeconds($dateMax, $dateMin);
@@ -212,7 +252,7 @@ class UtDate
             $tagClose = '';
         }
 
-        return "$tagOpen+ $tempo$tagClose";
+        return "$tagOpen+ $time$tagClose";
     }
 
     /**
@@ -224,10 +264,10 @@ class UtDate
      *
      * @return string
      */
-    public static function dateToTimestamp(string $data): string
+    public function dateToTimestamp(string $data): string
     {
-        $a = strptime($data, '%d/%m/%Y');
-        $timestamp = mktime(0, 0, 0, $a['tm_mon'] + 1, $a['tm_mday'], $a['tm_year'] + 1900);
+        $time = strptime($data, '%d/%m/%Y');
+        $timestamp = mktime(0, 0, 0, $time['tm_mon'] + 1, $time['tm_mday'], $time['tm_year'] + 1900);
         $mysqlTimestamp = date('Y-m-d H:i:s', $timestamp);
         return $mysqlTimestamp;
     }
@@ -239,17 +279,30 @@ class UtDate
      *
      * @return int
      */
-    public static function datetimeToTimestamp(string $data): int
+    public function datetimeToTimestamp(string $data): int
     {
-        $a = strptime($data, "%d/%m/%Y %H:%M:%S");
+        $time = strptime($data, "%d/%m/%Y %H:%M:%S");
         $timestamp = mktime(
-            $a['tm_hour'],
-            $a['tm_min'],
-            $a['tm_sec'],
-            $a['tm_mon'] + 1,
-            $a['tm_mday'],
-            $a['tm_year'] + 1900
+            $time['tm_hour'],
+            $time['tm_min'],
+            $time['tm_sec'],
+            $time['tm_mon'] + 1,
+            $time['tm_mday'],
+            $time['tm_year'] + 1900
         );
         return $timestamp;
+    }
+
+    /**
+     * Return datetime for sql DATETIME
+     *
+     * @return string
+     */
+    public function getCurrentDateTimeForDb(): string
+    {
+        $date = new \DateTime();
+        $timestamp = $date->getTimestamp();
+
+        return date('Y-m-d H:i:s', $timestamp);
     }
 }

@@ -10,11 +10,10 @@ declare(strict_types=1);
 
 namespace qFW\mvc\model\cf;
 
-// Classe controllo CODICE FISCALE per persone fisiche
+//
 // ----------------------------------------------------
 //
-// 2014-01-13 - Modificata sezione calcolo giorno di nascita per sesso=F
-// 2018-02-01 - Aggiunta get anno in 4 cifre
+//
 //
 // Metodi "setter":
 //  SetCF(CodiceFiscaleDaAnalizzare)
@@ -35,11 +34,20 @@ namespace qFW\mvc\model\cf;
 // - Vengono gestiti correttamente anche i casi di OMOCODIA
 //
 use qFW\mvc\controller\dataTypes\UtString;
+use qFW\mvc\controller\lang\ILang;
+use qFW\mvc\controller\vocabulary\Voc;
 
 /**
  * https://softwarearo.blogspot.it/2013/09/gestione-e-verifica-del-codice-fiscale.html
  *
  * Class CodiceFiscale
+ *
+ * Control Fiscal code, used in Italy
+ * Even cases of homocody are handled correctly
+ *
+ * 2014-01-13 - Modify from original user how to calculate day of birthday for female peoples
+ * 2018-02-01 - Change to OOP and add getAnno in 4 digits
+ * 2018-03-30 - Add translations and change methods name in english
  *
  * @package qFW\mvc\model\cf
  */
@@ -60,10 +68,18 @@ class CodiceFiscale implements ICodiceFiscale
     private $TabDecMesi = array();
     private $TabErrori = array();
 
+    /** @var \qFW\mvc\controller\dataTypes\UtString  */
+    private $utStr;
+
+    /** @var \qFW\mvc\controller\vocabulary\Voc  */
+    private $voc;
+
     /**
      * CodiceFiscale constructor.
+     *
+     * @param \qFW\mvc\controller\lang\ILang $lang
      */
-    public function __construct()
+    public function __construct(ILang $lang)
     {
         // Tabella sostituzioni per omocodia
         $this->TabDecOmocodia = array(
@@ -73,8 +89,7 @@ class CodiceFiscale implements ICodiceFiscale
             'V' => '9', 'W' => '!', 'X' => '!', 'Y' => '!', 'Z' => '!',
         );
 
-        // Posizioni caratteri interessati ad
-        // alterazione di codifica in caso di omocodia
+        // Posizioni caratteri interessati ad alterazione di codifica in caso di omocodia
         $this->TabSostOmocodia = array(6, 7, 9, 10, 12, 13, 14);
 
         // Tabella peso caratteri PARI
@@ -111,13 +126,16 @@ class CodiceFiscale implements ICodiceFiscale
             'L' => '07', 'M' => '08', 'P' => '09', 'R' => '10', 'S' => '11', 'T' => '12'
         );
 
+        $this->utStr = new UtString($lang);
+        $this->voc= new Voc();
+
         // Tabella messaggi di errore
         $this->TabErrori = array(
-            0 => 'Codice da analizzare assente',
-            1 => 'Lunghezza codice da analizzare non corretta',
-            2 => 'Il codice da analizzare contiene caratteri non corretti',
-            3 => 'Carattere non valido in decodifica omocodia',
-            4 => 'Codice fiscale non corretto'
+            0 => $this->voc->cfCodeIsAbsent(),
+            1 => $this->voc->cfCodeLenghtError(),
+            2 => $this->voc->cfCodeWrongChrs(),
+            3 => $this->voc->cfCodehomocodyError(),
+            4 => $this->voc->cfCodeNotValid(),
         );
     }
 
@@ -143,6 +161,8 @@ class CodiceFiscale implements ICodiceFiscale
             $this->codiceValido = false;
             $this->errore = $this->TabErrori[0];
             return false;
+        } else {
+            /*Ok*/
         }
 
         // Verifica lunghezza codice passato:
@@ -152,6 +172,8 @@ class CodiceFiscale implements ICodiceFiscale
             $this->codiceValido = false;
             $this->errore = $this->TabErrori[1];
             return false;
+        } else {
+            /*Ok*/
         }
 
         // Converto in maiuscolo
@@ -167,6 +189,8 @@ class CodiceFiscale implements ICodiceFiscale
             $this->codiceValido = false;
             $this->errore = $this->TabErrori[2];
             return false;
+        } else {
+            /*Ok*/
         }
 
         // Converto la stringa in array
@@ -182,7 +206,11 @@ class CodiceFiscale implements ICodiceFiscale
                     $this->codiceValido = false;
                     $this->errore = $this->TabErrori[3];
                     return false;
+                } else {
+                    /*Ok*/
                 }
+            } else {
+                /*Ok*/
             }
         }
 
@@ -213,6 +241,8 @@ class CodiceFiscale implements ICodiceFiscale
             for ($i = 0; $i < count($this->TabSostOmocodia); $i++) {
                 if (!is_numeric($cfArray[$this->TabSostOmocodia[$i]])) {
                     $cfArray[$this->TabSostOmocodia[$i]] = $this->TabDecOmocodia[$cfArray[$this->TabSostOmocodia[$i]]];
+                } else {
+                    /*Ok*/
                 }
             }
 
@@ -233,9 +263,13 @@ class CodiceFiscale implements ICodiceFiscale
             $this->ggNascita = substr($CodiceFiscaleAdattato, 9, 2);
             if ($this->sesso === 'F') {
                 $this->ggNascita = $this->ggNascita - 40;
-                if (strlen(UtString::getCleanString($this->ggNascita)) === 1) {
+                if (strlen($this->utStr->getCleanString($this->ggNascita)) === 1) {
                     $this->ggNascita = "0{$this ->ggNascita}";
+                } else {
+                    /*Ok*/
                 }
+            } else {
+                /*Ok*/
             }
         }
 
@@ -245,7 +279,7 @@ class CodiceFiscale implements ICodiceFiscale
     /**
      * @return bool
      */
-    public function getCodiceValido(): bool
+    public function getValidCode(): bool
     {
         return $this->codiceValido;
     }
@@ -253,7 +287,7 @@ class CodiceFiscale implements ICodiceFiscale
     /**
      * @return string
      */
-    public function getErrore(): string
+    public function getError(): string
     {
         return $this->errore;
     }
@@ -261,7 +295,7 @@ class CodiceFiscale implements ICodiceFiscale
     /**
      * @return string
      */
-    public function getSesso(): string
+    public function getSex(): string
     {
         return $this->sesso;
     }
@@ -269,7 +303,7 @@ class CodiceFiscale implements ICodiceFiscale
     /**
      * @return null
      */
-    public function getComuneNascita()
+    public function getPlaceBirth()
     {
         return $this->comuneNascita;
     }
@@ -278,9 +312,9 @@ class CodiceFiscale implements ICodiceFiscale
      * @return string
      * @throws \Exception
      */
-    public function getAANascita(): string
+    public function getYYBirth(): string
     {
-        return UtString::getCleanString($this->aaNascita);
+        return $this->utStr->getCleanString($this->aaNascita);
     }
 
     /**
@@ -293,7 +327,7 @@ class CodiceFiscale implements ICodiceFiscale
      * @return string
      * @throws \Exception
      */
-    public function getAAAANascita(bool $ultraCent = false): string
+    public function getYYYYBirth(bool $ultraCent = false): string
     {
         $annoN4 = '0';
 
@@ -303,29 +337,33 @@ class CodiceFiscale implements ICodiceFiscale
 
             if ($diff > 0) {
                 $annoN4 = "20{$this->aaNascita}";
-            }
-            if ($diff < 0) {
+            } elseif ($diff < 0) {
                 $annoN4 = "19{$this->aaNascita}";
+            } else {
+                /*Ok*/
             }
+        } else {
+            throw new \Exception('fixme');
+            /*@fixme*/
         }
-        return UtString::getCleanString($annoN4);
+        return $this->utStr->getCleanString($annoN4);
     }
 
     /**
      * @return string
      * @throws \Exception
      */
-    public function getMMNascita(): string
+    public function getMMBirth(): string
     {
-        return UtString::getCleanString($this->mmNascita);
+        return $this->utStr->getCleanString($this->mmNascita);
     }
 
     /**
      * @return string
      * @throws \Exception
      */
-    public function getGGNascita(): string
+    public function getDDBirth(): string
     {
-        return UtString::getCleanString($this->ggNascita);
+        return $this->utStr->getCleanString($this->ggNascita);
     }
 }

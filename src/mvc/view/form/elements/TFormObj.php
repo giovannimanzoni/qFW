@@ -19,7 +19,6 @@ namespace qFW\mvc\view\form\elements;
  */
 trait TFormObj
 {
-
     private $required = false;
     private $defaultValue = 0;
     private $defaultText = '';
@@ -27,29 +26,49 @@ trait TFormObj
     private $labelDisabled = false;
 
     /*************************************************
-     * usati per la creazione dell'oggetto
+     * Used for creating the object
      ************************************************/
 
-    // Imposta il valore di default
+    /**
+     * Set the default value
+     *
+     * @param int $defaultValue
+     *
+     * @return $this
+     */
     public function setDefaultValue(int $defaultValue)
     {
         $this->defaultValue = $defaultValue;
         return $this;
     }
 
-    // Imposta lable. default vuota
+    /**
+     * Set label. default empty
+     *
+     * @param string $label
+     *
+     * @return $this
+     */
     public function setLabel(string $label)
     {
         $this->label = $label;
         return $this;
     }
 
+    /**
+     * @param string $text
+     *
+     * @return $this
+     */
     public function setDefaultText(string $text)
     {
         $this->defaultText = $text;
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function setLabelDisabled()
     {
         $this->labelDisabled = true;
@@ -57,18 +76,28 @@ trait TFormObj
     }
 
     /*************************************************
-     * usati per la costruzione del form
+     * Used for the construction of the form
      ************************************************/
+
+    /**
+     * @return string
+     */
     public function getLabel(): string
     {
         return $this->label;
     }
 
+    /**
+     * @return bool
+     */
     public function isRequired(): bool
     {
         return $this->required;
     }
 
+    /**
+     * @return bool
+     */
     public function isLabelDisabled(): bool
     {
         return $this->labelDisabled;

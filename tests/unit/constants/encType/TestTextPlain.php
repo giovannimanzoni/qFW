@@ -17,7 +17,7 @@ class TestTextPlain extends TestCase
      */
     public function testGetTextPlain()
     {
-        $val= new TextPlain();
-        $this->assertEquals('text/plain',$val->getCode());
+        $val = new TextPlain();
+        $this->assertEquals('text/plain', $val->getCode());
     }
 }

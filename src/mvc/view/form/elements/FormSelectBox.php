@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace qFW\mvc\view\form\elements;
 
+use qFW\mvc\controller\lang\ILang;
+use qFW\mvc\controller\vocabulary\Voc;
 use qFW\mvc\view\form\TError;
 use qFW\mvc\view\form\TGlobalAttributes;
 
@@ -22,8 +24,8 @@ use qFW\mvc\view\form\TGlobalAttributes;
  */
 class FormSelectBox implements IFormElements
 {
-        // specific to select box
-    /** @var array hold options for the select element*/
+    // Specific to select box
+    /** @var array Hold options for the select element */
     private $options = array();
 
     /** @var bool Specifies that the drop-down list should automatically get focus when the page loads */
@@ -38,6 +40,9 @@ class FormSelectBox implements IFormElements
     /** @var int Defines the number of visible options in a drop-down list */
     private $size = 0;
 
+    /** @var \qFW\mvc\controller\vocabulary\Voc */
+    private $voc;
+
     use TError;
     use TFormObj;
     use TBootstrap;
@@ -46,20 +51,21 @@ class FormSelectBox implements IFormElements
     /**
      * FormSelectBox constructor.
      *
-     * @param string $id        html id
-     * @param bool   $required  Specifies that the user is required to select a value before submitting the form
-     * @param array  $options   array of string. Each element is an selectable element of select
+     * @param string $id                                    html id
+     * @param bool   $required                              Specifies that the user is required to select a value before
+     *                                                      submitting the form
+     * @param array  $options
      */
     public function __construct(string $id, bool $required, array $options)
     {
         $this->id = $id;
         $this->required = $required;
         $this->options = $options;
+        $this->voc = new Voc();
     }
 
-
     /*********************************************************************************************************
-     * metodi specifici di select-box
+     * Specific methods of select-box
      ********************************************************************************************************/
 
     /**
@@ -120,7 +126,7 @@ class FormSelectBox implements IFormElements
     }
 
     /*********************************************************************************************************
-     * metodi dell'interfaccia IFormElements
+     * Methods for IFormElements interfaces
      ********************************************************************************************************/
 
     /**
@@ -141,19 +147,19 @@ class FormSelectBox implements IFormElements
     public function check(): bool
     {
 
-        // check se valore di default esiste nell'elenco dei valori
+        // Check if default value exists in the list of values
         if (($this->defaultValue != 0) &&
             !array_key_exists($this->defaultValue, $this->options)
         ) {
-            $this->addLog("id {$this->id}: Valore di default non trovato.");
+            $this->addLog("id {$this->id}: _VOC_", $this->voc->formDefValueNotFound());
         }
 
 
-        return $this->getCheckEsito();
+        return $this->getCheckOutcome();
     }
 
     /**
-     * make html code for Select box
+     * Make html code for Select box
      *
      * @return string
      */
@@ -169,40 +175,56 @@ class FormSelectBox implements IFormElements
             $html .= "<div class='input-group col-xs-{$this->col2}'><select size='{$this->size}' name='{$this->id}' ";
             if ($this->required) {
                 $html .= 'required="required" ';
+            } else {
+                /*Ok*/
             }
             if ($this->autofocus) {
                 $html .= 'autofocus="autofocus" ';
+            } else {
+                /*Ok*/
             }
             if ($this->disabled) {
                 $html .= 'disabled="disabled" ';
+            } else {
+                /*Ok*/
             }
             if ($this->multiple) {
                 $html .= 'multiple="multiple" ';
+            } else {
+                /*Ok*/
             }
             if ($this->size) {
                 $html .= "size='{$this->size}' ";
+            } else {
+                /*Ok*/
             }
 
-            // imposta classe di bootstrap + quella eventuale impostata dall'utente
+            // Set bootstrap class + any one set by the user
             $this->setClass("form-control {$this->class} ");
 
             $html .= $this->getGlobalAttributes();
 
-            // riga vuota, obbliga la selezione
+            // Empty line, forces selection
             $html .= "><option value='0'>{$this->defaultText}</option>";
 
 
             foreach ($this->options as $key => $option) {
                 if ($key == 0) {
                     $key = '';
+                } else {
+                    /*Ok*/
                 }
                 $html .= "<option value='{$key}'";
                 if ($key == $this->defaultValue) {
                     $html .= ' selected="selected" ';
+                } else {
+                    /*Ok*/
                 }
                 $html .= ">$option</option>";
             }
             $html .= "</select></div>";
+        } else {
+            /*Ok*/
         }
         return $html;
     }

@@ -52,7 +52,7 @@ class HttpRequestObjProxy implements \SplObserver
     }
 
     /**
-     * call update function on proxied http request engine
+     * Call update function on proxied http request engine
      *
      * @param \SplSubject $subject
      *

@@ -19,6 +19,7 @@ namespace qFW\mvc\controller\errors;
  */
 final class FWThrowable extends \Exception implements IFWThrowable
 {
+    /** @var bool */
     private static $logSql = true;
 
     /**
@@ -31,8 +32,10 @@ final class FWThrowable extends \Exception implements IFWThrowable
         self::printException($e);
 
         if (self::$logSql) {
-            // @todo completare
+            // @todo finish this
             //Sql::log();
+        } else {
+            /*@todo finish*/
         }
     }
 

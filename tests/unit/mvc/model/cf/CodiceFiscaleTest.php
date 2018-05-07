@@ -3,6 +3,7 @@
 namespace qFW\tests\unit\mvc\model\cf;
 
 use PHPUnit\Framework\TestCase;
+use qFW\mvc\controller\lang\LangEn;
 use qFW\mvc\model\cf\CodiceFiscale;
 
 /**
@@ -14,31 +15,32 @@ class CodiceFiscaleTest extends TestCase
 {
 
     /**
-     * Test getSesso for M
+     * Test getSex for M
      */
     public function testGetSessoM()
     {
-        $cf=new CodiceFiscale();
+        $lang = new LangEn();
 
-        $cf->SetCF('MNZGNN87D07L388G');
+        $cf = new CodiceFiscale($lang);
 
-        $this->assertEquals('M',$cf->GetSesso());
+        $cf->setCF('MNZGNN87D07L388G');
+
+        $this->assertEquals('M', $cf->getSex());
     }
 
     /**
-     * Test getSesso for F
+     * Test getSex for F
      */
     public function testGetSessoF()
     {
-        $cf=new CodiceFiscale();
+        $lang = new LangEn();
 
-        $cf->SetCF('GTTRTI80A41A794Q');
-        $this->assertEquals('F',$cf->GetSesso());
+        $cf = new CodiceFiscale($lang);
 
-        $cf->SetCF('FLRMLD87L54Z129N');
-        $this->assertEquals('F',$cf->GetSesso());
+        $cf->setCF('GTTRTI80A41A794Q');
+        $this->assertEquals('F', $cf->getSex());
 
-
+        $cf->setCF('FLRMLD87L54Z129N');
+        $this->assertEquals('F', $cf->getSex());
     }
-
 }

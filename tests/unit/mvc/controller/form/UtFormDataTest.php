@@ -2,8 +2,10 @@
 
 namespace qFW\tests\unit\mvc\controller\form;
 
+use qFW\mvc\controller\dataTypes\UtString;
 use qFW\mvc\controller\form\UtFormData;
 use PHPUnit\Framework\TestCase;
+use qFW\mvc\controller\lang\LangEn;
 
 /**
  * Class UtFormDataTest
@@ -12,6 +14,20 @@ use PHPUnit\Framework\TestCase;
  */
 class UtFormDataTest extends TestCase
 {
+    private static $lang;
+    private static $utFormData;
+
+    /**
+     * Setup class
+     */
+    public static function setUpBeforeClass()
+    {
+        fwrite(STDOUT, __METHOD__ . "\n");
+
+        self::$lang = new LangEn();
+        self::$utFormData = new UtFormData(self::$lang);
+    }
+
     /**
      * Test are valid CF
      *
@@ -19,32 +35,32 @@ class UtFormDataTest extends TestCase
      */
     public function testAreCf()
     {
-        $cfArr=array(
+        $cfArr = array(
             'MNZGNN87D07L388G', // uomo
             'GTTRTI80A41A794Q', // donna
             'FLRMLD87L54Z129N'  // donna
         );
 
-        $this->assertTrue( UtFormData::areCf($cfArr));
+        $this->assertTrue(self::$utFormData->areCf($cfArr));
     }
 
     public function testAreCfNotValid()
     {
 
         // male, wrong control code
-        $this->assertFalse( UtFormData::areCf(array('MNZGNN87D07L388H')));
+        $this->assertFalse(self::$utFormData->areCf(array('MNZGNN87D07L388H')));
 
         // female, wrong control code
-        $this->assertFalse( UtFormData::areCf(array('GTTRTI80A41A794T')));
+        $this->assertFalse(self::$utFormData->areCf(array('GTTRTI80A41A794T')));
 
-        $this->assertFalse( UtFormData::areCf(array('')));
-        $this->assertFalse( UtFormData::areCf(array(' ')));
-        $this->assertFalse( UtFormData::areCf(array('10/12/2003')));
-        $this->assertFalse( UtFormData::areCf(array('192.168.0.10')));
-        $this->assertFalse( UtFormData::areCf(array('50')));
-        $this->assertFalse( UtFormData::areCf(array('50,30')));
-        $this->assertFalse( UtFormData::areCf(array('50.30')));
-        $this->assertFalse( UtFormData::areCf(array('/var/www')));
+        $this->assertFalse(self::$utFormData->areCf(array('')));
+        $this->assertFalse(self::$utFormData->areCf(array(' ')));
+        $this->assertFalse(self::$utFormData->areCf(array('10/12/2003')));
+        $this->assertFalse(self::$utFormData->areCf(array('192.168.0.10')));
+        $this->assertFalse(self::$utFormData->areCf(array('50')));
+        $this->assertFalse(self::$utFormData->areCf(array('50,30')));
+        $this->assertFalse(self::$utFormData->areCf(array('50.30')));
+        $this->assertFalse(self::$utFormData->areCf(array('/var/www')));
 
     }
 
@@ -54,13 +70,13 @@ class UtFormDataTest extends TestCase
      */
     public function testAreNotEmptyValid()
     {
-        $arr=array(
+        $arr = array(
             'RFWERWE',
             ' ',
             '4432'
         );
 
-        $this->assertTrue( UtFormData::areNotEmpty($arr));
+        $this->assertTrue(self::$utFormData->areNotEmpty($arr));
     }
 
     /**
@@ -68,7 +84,7 @@ class UtFormDataTest extends TestCase
      */
     public function testAreNotEmptyNotValid()
     {
-        $this->assertFalse( UtFormData::areNotEmpty(array('')));
+        $this->assertFalse(self::$utFormData->areNotEmpty(array('')));
     }
 
 
@@ -77,12 +93,12 @@ class UtFormDataTest extends TestCase
      */
     public function testAreNumbersValid()
     {
-        $arr=array(
+        $arr = array(
             41,
             44.2
         );
 
-        $this->assertTrue( UtFormData::areNumbers($arr));
+        $this->assertTrue(self::$utFormData->areNumbers($arr));
     }
 
     /**
@@ -90,12 +106,12 @@ class UtFormDataTest extends TestCase
      */
     public function testAreNumbersNotValid()
     {
-        $this->assertFalse( UtFormData::areNumbers(array(true)));
-        $this->assertFalse( UtFormData::areNumbers(array(false)));
-        $this->assertFalse( UtFormData::areNumbers(array('192.168.0.10')));
-        $this->assertFalse( UtFormData::areNumbers(array('')));
-        $this->assertFalse( UtFormData::areNumbers(array('10/12/2003')));
-        $this->assertFalse( UtFormData::areNumbers(array('MNZGNN87D07L388G')));
+        $this->assertFalse(self::$utFormData->areNumbers(array(true)));
+        $this->assertFalse(self::$utFormData->areNumbers(array(false)));
+        $this->assertFalse(self::$utFormData->areNumbers(array('192.168.0.10')));
+        $this->assertFalse(self::$utFormData->areNumbers(array('')));
+        $this->assertFalse(self::$utFormData->areNumbers(array('10/12/2003')));
+        $this->assertFalse(self::$utFormData->areNumbers(array('MNZGNN87D07L388G')));
     }
 
     /**
@@ -103,12 +119,12 @@ class UtFormDataTest extends TestCase
      */
     public function testAreDate()
     {
-        $arr=array(
+        $arr = array(
             '10/12/2003',
             '30/12/2003'
         );
 
-        $this->assertTrue( UtFormData::areDate($arr));
+        $this->assertTrue(self::$utFormData->areDate($arr));
     }
 
     /**
@@ -117,14 +133,14 @@ class UtFormDataTest extends TestCase
     public function testAreDateNotValid1()
     {
 
-        $this->assertFalse( UtFormData::areDate(array('30/02/2003')));
-        $this->assertFalse( UtFormData::areDate(array('30/2/2003')));
-        $this->assertFalse( UtFormData::areDate(array('/var/www')));
-        $this->assertFalse( UtFormData::areDate(array('30')));
-        $this->assertFalse( UtFormData::areDate(array('30.00')));
-        $this->assertFalse( UtFormData::areDate(array('30,00')));
-        $this->assertFalse( UtFormData::areDate(array('pippo')));
-        $this->assertFalse( UtFormData::areDate(array('MNZGNN87D07L388G')));
+        $this->assertFalse(self::$utFormData->areDate(array('30/02/2003')));
+        $this->assertFalse(self::$utFormData->areDate(array('30/2/2003')));
+        $this->assertFalse(self::$utFormData->areDate(array('/var/www')));
+        $this->assertFalse(self::$utFormData->areDate(array('30')));
+        $this->assertFalse(self::$utFormData->areDate(array('30.00')));
+        $this->assertFalse(self::$utFormData->areDate(array('30,00')));
+        $this->assertFalse(self::$utFormData->areDate(array('pippo')));
+        $this->assertFalse(self::$utFormData->areDate(array('MNZGNN87D07L388G')));
     }
 
     /**
@@ -132,12 +148,12 @@ class UtFormDataTest extends TestCase
      */
     public function testAreIds()
     {
-        $arr=array(
+        $arr = array(
             1,
             100,
         );
 
-        $this->assertTrue( UtFormData::areIds($arr));
+        $this->assertTrue(self::$utFormData->areIds($arr));
     }
 
     /**
@@ -145,8 +161,8 @@ class UtFormDataTest extends TestCase
      */
     public function testAreIdsNotValids()
     {
-        $this->assertFalse( UtFormData::areIds(array(0)));
-        $this->assertFalse( UtFormData::areIds(array(-1)));
+        $this->assertFalse(self::$utFormData->areIds(array(0)));
+        $this->assertFalse(self::$utFormData->areIds(array(-1)));
     }
 
     /**
@@ -154,13 +170,13 @@ class UtFormDataTest extends TestCase
      */
     public function testAreText()
     {
-        $arr=array(
+        $arr = array(
             'pippo',
             '10/10/2000',
             '192.168.0.0'
         );
 
-        $this->assertTrue( UtFormData::areText($arr));
+        $this->assertTrue(self::$utFormData->areText($arr));
     }
 
     /**
@@ -168,7 +184,7 @@ class UtFormDataTest extends TestCase
      */
     public function testAreTextNotValid()
     {
-        $this->assertFalse( UtFormData::areText(array('')));
+        $this->assertFalse(self::$utFormData->areText(array('')));
     }
 
 
@@ -177,7 +193,7 @@ class UtFormDataTest extends TestCase
      */
     public function testAreIps()
     {
-        $arr=array(
+        $arr = array(
             '192.168.0.0',
             '10.50.0.53',
             'localhost',
@@ -185,7 +201,7 @@ class UtFormDataTest extends TestCase
             '127.0.0.1|192.168.100.2|192.168.2.30',     //multiple ips
         );
 
-        $this->assertTrue( UtFormData::areIps($arr));
+        $this->assertTrue(self::$utFormData->areIps($arr));
     }
 
     /**
@@ -194,15 +210,15 @@ class UtFormDataTest extends TestCase
     public function testAreIpsNotValid()
     {
 
-        $this->assertFalse( UtFormData::areIps(array('192.168.0.')));
-        $this->assertFalse( UtFormData::areIps(array('10.50.0.530')));
-        $this->assertFalse( UtFormData::areIps(array('192.168.0')));
-        $this->assertFalse( UtFormData::areIps(array('10/12/2000')));
-        $this->assertFalse( UtFormData::areIps(array('50')));
-        $this->assertFalse( UtFormData::areIps(array('50.33')));
-        $this->assertFalse( UtFormData::areIps(array('pippo')));
-        $this->assertFalse( UtFormData::areIps(array('/var/www')));
-        $this->assertFalse( UtFormData::areIps(array('10.50.0.53|pippo'))); // valid ip with string
+        $this->assertFalse(self::$utFormData->areIps(array('192.168.0.')));
+        $this->assertFalse(self::$utFormData->areIps(array('10.50.0.530')));
+        $this->assertFalse(self::$utFormData->areIps(array('192.168.0')));
+        $this->assertFalse(self::$utFormData->areIps(array('10/12/2000')));
+        $this->assertFalse(self::$utFormData->areIps(array('50')));
+        $this->assertFalse(self::$utFormData->areIps(array('50.33')));
+        $this->assertFalse(self::$utFormData->areIps(array('pippo')));
+        $this->assertFalse(self::$utFormData->areIps(array('/var/www')));
+        $this->assertFalse(self::$utFormData->areIps(array('10.50.0.53|pippo'))); // valid ip with string
     }
 
 
@@ -211,7 +227,7 @@ class UtFormDataTest extends TestCase
      */
     public function testArePaths()
     {
-        $arr=array(
+        $arr = array(
             '/',                                // root
             'images/',                          // one folder with relative path
             '/images/',                         // one folder with absolute path
@@ -219,7 +235,7 @@ class UtFormDataTest extends TestCase
             'www/domain.com/'                   //relative path
         );
 
-        $this->assertTrue( UtFormData::arePaths($arr));
+        $this->assertTrue(self::$utFormData->arePaths($arr));
     }
 
     /**
@@ -228,14 +244,14 @@ class UtFormDataTest extends TestCase
     public function testArePathsNotValid()
     {
 
-        $this->assertFalse( UtFormData::arePaths(array('01/01/2000'))); // date
-        $this->assertFalse( UtFormData::arePaths(array('images'))); // missing trailing /
-        $this->assertFalse( UtFormData::arePaths(array('localhost'))); // string
-        $this->assertFalse( UtFormData::arePaths(array('192.168.0.1'))); // ip
-        $this->assertFalse( UtFormData::arePaths(array('4340')));
-        $this->assertFalse( UtFormData::arePaths(array('52.00')));
-        $this->assertFalse( UtFormData::arePaths(array('http://')));    // douple dot found
-        $this->assertFalse( UtFormData::arePaths(array('http://www.google.it/')));
+        $this->assertFalse(self::$utFormData->arePaths(array('01/01/2000'))); // date
+        $this->assertFalse(self::$utFormData->arePaths(array('images'))); // missing trailing /
+        $this->assertFalse(self::$utFormData->arePaths(array('localhost'))); // string
+        $this->assertFalse(self::$utFormData->arePaths(array('192.168.0.1'))); // ip
+        $this->assertFalse(self::$utFormData->arePaths(array('4340')));
+        $this->assertFalse(self::$utFormData->arePaths(array('52.00')));
+        $this->assertFalse(self::$utFormData->arePaths(array('http://')));    // douple dot found
+        $this->assertFalse(self::$utFormData->arePaths(array('http://www.google.it/')));
     }
 
 
@@ -244,13 +260,13 @@ class UtFormDataTest extends TestCase
      */
     public function testArePorts()
     {
-        $arr=array(
+        $arr = array(
             1200,
             34000,
             80
         );
 
-        $this->assertTrue( UtFormData::arePorts($arr));
+        $this->assertTrue(self::$utFormData->arePorts($arr));
     }
 
     /**
@@ -259,9 +275,9 @@ class UtFormDataTest extends TestCase
     public function testArePortsNotValid()
     {
 
-        $this->assertFalse( UtFormData::arePorts(array(0)));
-        $this->assertFalse( UtFormData::arePorts(array(340000)));
-        $this->assertFalse( UtFormData::arePorts(array(80.30)));
+        $this->assertFalse(self::$utFormData->arePorts(array(0)));
+        $this->assertFalse(self::$utFormData->arePorts(array(340000)));
+        $this->assertFalse(self::$utFormData->arePorts(array(80.30)));
 
     }
 
@@ -270,31 +286,40 @@ class UtFormDataTest extends TestCase
      */
     public function testAreUrls()
     {
-        $_SESSION['err']='';
+        $_SESSION['err'] = '';
 
-        $arr=array(
+        $arr = array(
             'http://google.it',
             'http://www.google.it',
             'https://google.it',
             'https://www.google.it',
             'https://www.w3resource.com/images/w3resource-logo.png',  // valid image url
-
+            'http://giovannimanzoni.com',
+            'https://giovannimanzoni.com',
         );
 
-        $this->assertTrue( UtFormData::areUrls($arr));
+        $this->assertTrue(self::$utFormData->areUrls($arr));
     }
+
+    /**
+     *
+     */
+    public function testIsUrl()
+    {
+        $this->assertTrue(self::$utFormData->isUrl('http://giovannimanzoni.com'));
+    }
+
 
     /**
      * Test for not valid urls
      */
     public function testAreUrlsNotValid()
     {
-        $_SESSION['err']='';
+        $_SESSION['err'] = '';
 
-        $this->assertFalse( UtFormData::areUrls(array('google.it')));        // missing http
-        $this->assertFalse( UtFormData::areUrls(array('http://www.fakefakedomain.it')));
-        $this->assertFalse( UtFormData::areUrls(array('http://www.google.it/image/aa.jpg'))); // missing image
+        $this->assertFalse(self::$utFormData->areUrls(array('google.it')));        // missing http
+        $this->assertFalse(self::$utFormData->areUrls(array('http://www.fakefakedomain.it')));
+        $this->assertFalse(self::$utFormData->areUrls(array('http://www.google.it/image/aa.jpg'))); // missing image
 
     }
-
 }

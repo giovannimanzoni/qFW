@@ -17,7 +17,6 @@ namespace qFW\mvc\view\pages;
  */
 interface IHtml
 {
-
     /**
      * @return string get html
      */

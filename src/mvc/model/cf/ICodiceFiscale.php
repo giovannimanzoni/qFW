@@ -27,42 +27,42 @@ interface ICodiceFiscale
     /**
      * @return bool
      */
-    public function getCodiceValido(): bool;
+    public function getValidCode(): bool;
 
     /**
      * @return string
      */
-    public function getErrore(): string;
+    public function getError(): string;
 
     /**
      * @return string
      */
-    public function getSesso(): string;
+    public function getSex(): string;
 
     /**
      * @return mixed
      */
-    public function getComuneNascita();
+    public function getPlaceBirth();
 
     /**
      * @return string
      */
-    public function getAANascita(): string;
+    public function getYYBirth(): string;
 
     /**
      * @param bool $ultraCent
      *
      * @return string
      */
-    public function getAAAANascita(bool $ultraCent = false): string;
+    public function getYYYYBirth(bool $ultraCent = false): string;
 
     /**
      * @return string
      */
-    public function getMMNascita(): string;
+    public function getMMBirth(): string;
 
     /**
      * @return string
      */
-    public function getGGNascita(): string;
+    public function getDDBirth(): string;
 }

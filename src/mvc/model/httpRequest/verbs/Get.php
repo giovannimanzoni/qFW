@@ -19,7 +19,6 @@ namespace qFW\mvc\model\httpRequest\verbs;
  */
 class Get implements IVerbs
 {
-
     /**
      * Get constructor.
      */

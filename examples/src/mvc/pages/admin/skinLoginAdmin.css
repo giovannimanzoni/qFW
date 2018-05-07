@@ -1,0 +1,85 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #d5d425;
+}
+
+#containerLogin{
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+#containerLogin::after,
+#containerLogin::before{
+    content: " ";
+    display: table;
+}
+
+#containerLogin::after{
+    clear: both;
+}
+
+.login-box {
+    background: rgba(0, 0, 0, 0) linear-gradient(to bottom, rgb(245, 245, 245) 0%, rgb(255, 255, 255) 19%, rgb(255, 255, 255) 77%, rgb(245, 245, 245) 100%) repeat scroll 0 0;
+    box-shadow: 0 0 0 5px rgb(234, 0, 27);
+    color: #000;
+    margin: 100px auto;
+    max-width: 400px;
+    min-width: 200px;
+    overflow: hidden;
+    padding: 20px;
+}
+
+hr {
+    background: #ea001b none repeat scroll 0 0;
+    border: medium none;
+    height: 4px;
+    margin: 0;
+}
+
+.login-box p {
+    font-weight: normal;
+    margin: 10px 30px;
+}
+
+.login-box h3 {
+    color: #646464;
+    font-family: monaco,"sans-serif";
+    font-weight: normal;
+    margin-left: 30px;
+}
+h3 {
+    font-size: 19px;
+    line-height: 15px;
+}
+
+a {
+    color: #646464;
+}
+
+#login{
+    background-color: #d5d425;
+    border: 1px solid #b0af24;
+
+}
+.login-box .input-group-addon {
+    background-color: #24bf40;
+    border: 1px solid #1ba027;
+}
+
+
+.input-group-addon {
+    color: #000000;
+}
+
+body .login-box input[type="text"], body .login-box input[type="password"] {
+    border: 1px solid #1ba027 !important;
+    color: #24bf40;
+    font-weight: bold;
+}
+
+.form-control:focus{
+    box-shadow: 0 20px 10px rgba(36, 191, 64, 0.8) inset,  0 0 8px rgba(0,0,0,1);
+}

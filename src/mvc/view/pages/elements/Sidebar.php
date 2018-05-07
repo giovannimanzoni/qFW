@@ -8,7 +8,6 @@
  */
 declare(strict_types=1);
 
-
 namespace qFW\mvc\view\pages\elements;
 
 use qFW\mvc\view\template\ITplSidebar;
@@ -20,14 +19,22 @@ use qFW\mvc\view\template\ITplSidebar;
  */
 final class Sidebar implements ISidebar
 {
-
+    /** @var string  */
     private $html='';
 
+    /**
+     * Sidebar constructor.
+     *
+     * @param \qFW\mvc\view\template\ITplSidebar $sidebarTpl
+     */
     public function __construct(ITplSidebar $sidebarTpl)
     {
         $this->html=$sidebarTpl->getHtml();
     }
 
+    /**
+     * @return string
+     */
     public function getHtml(): string
     {
         return $this->html;

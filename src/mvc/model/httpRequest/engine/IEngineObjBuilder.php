@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace qFW\mvc\model\httpRequest\engine;
 
+use qFW\mvc\controller\lang\ILang;
 use qFW\mvc\model\httpRequest\verbs\IVerbs;
 use qFW\log\ILogOutput;
 
@@ -25,18 +26,20 @@ interface IEngineObjBuilder
     /**
      * IEngineObjBuilder constructor.
      *
-     * @param string                                     $url
+     * @param string                                  $url
      * @param \qFW\mvc\model\httpRequest\verbs\IVerbs $verb
      * @param \qFW\log\ILogOutput                     $outputLog
-     * @param string                                     $contentType
-     * @param string                                     $acceptType
+     * @param string                                  $contentType
+     * @param string                                  $acceptType
+     * @param \qFW\mvc\controller\lang\ILang          $lang
      */
     public function __construct(
         string $url,
         IVerbs $verb,
         ILogOutput $outputLog,
         string $contentType,
-        string $acceptType
+        string $acceptType,
+        ILang $lang
     );
 
     /**

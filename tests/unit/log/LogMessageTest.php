@@ -17,10 +17,10 @@ class LogMessageTest extends TestCase
      */
     public function test__construct()
     {
-        $LogMessage= new LogMessage('type','string');
+        $LogMessage = new LogMessage('type', 'string');
 
-        $this->assertEquals('string',$LogMessage->getText());
-        $this->assertEquals('type',$LogMessage->getType());
-        $this->assertEquals(gmdate('Y-m-d H:i:s'),$LogMessage->getDate());
+        $this->assertEquals('string', $LogMessage->getText());
+        $this->assertEquals('type', $LogMessage->getType());
+        $this->assertEquals(gmdate('Y-m-d H:i:s'), $LogMessage->getDate());
     }
 }

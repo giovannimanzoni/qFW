@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace qFW\mvc\view\pages\elements;
 
+use qFW\mvc\controller\lang\ILang;
 use qFW\mvc\view\template\content\ITplContent;
 
 /**
@@ -23,9 +24,9 @@ interface IContent
      * IContent constructor.
      *
      * @param \qFW\mvc\view\template\content\ITplContent $templateContent
-     * @param string                                     $del
+     * @param \qFW\mvc\controller\lang\ILang             $lang
      */
-    public function __construct(ITplContent $templateContent, string $del = "\n");
+    public function __construct(ITplContent $templateContent, ILang $lang);
 
     /**
      * Add breacumb

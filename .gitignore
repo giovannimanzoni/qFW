@@ -1,4 +1,7 @@
 /vendor/*
+.idea/*
+/examples/src/vendor/*
+/examples/src/.idea/*
 /build/*
 /cache/*
 /sami.phar

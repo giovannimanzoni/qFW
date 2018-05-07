@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace qFW\mvc\view\form;
 
 use qFW\log\ILogOutput;
+use qFW\mvc\controller\lang\ILang;
 use qFW\mvc\view\form\elements\IFormElements;
 
 /**
@@ -25,10 +26,10 @@ interface IFormPage
     /**
      * IFormPage constructor.
      *
-     * @param string                 $tabName       page name
-     * @param \qFW\log\ILogOutput $outputLog     log engine to use
+     * @param \qFW\log\ILogOutput $logger
+     * @param string              $tabName
      */
-    public function __construct(string $tabName, ILogOutput $outputLog);
+    public function __construct(ILogOutput $logger, string $tabName = ' ');
 
     /**
      * Add form element to the page

@@ -8,23 +8,23 @@
  */
 declare(strict_types=1);
 
-namespace qFW\log\Consolle;
+namespace qFW\log\Console;
 
 use qFW\log\ALogger;
 use qFW\log\ILogger;
 use qFW\log\ILogMessage;
 
 /**
- * Class Consolle
+ * Class Console
  *
- * Manage logs for output them in web consolle
+ * Manage logs for output them in web console
  *
- * @package qFW\log\Consolle
+ * @package qFW\log\Console
  */
-class Consolle extends ALogger implements ILogger
+class Console extends ALogger implements ILogger
 {
     /**
-     * Return the html code for see all logs in web consolle
+     * Return the html code for see all logs in web console
      *
      * @return string           html code
      */
@@ -32,16 +32,17 @@ class Consolle extends ALogger implements ILogger
     {
         $html = '';
 
-        if (array_key_exists('logs', $this->logArray)) {
+        if (array_key_exists('logs', $_SESSION['ALOGGER'])) {
             $html .= '<script type="text/javascript">';
 
-            foreach ($this->logArray['logs'] as $line) {
+            foreach ($_SESSION['ALOGGER']['logs'] as $line) {
                 $html .= $this->formatLogRow($line);
             }
 
             $html .= '</script>';
+            unset($_SESSION['ALOGGER']);
         } else {
-            $html = 'console.log(No errors to show.);';
+            $html = '<script type="text/javascript">console.log("No errors to show.");</script>';
         }
 
         return $html;
@@ -56,6 +57,6 @@ class Consolle extends ALogger implements ILogger
      */
     private function formatLogRow(ILogMessage $log)
     {
-        return "console.log({$log->getDate()} : {$log->getType()} | {$log->getText()});";
+        return "console.log('{$log->getDate()} : {$log->getType()} | {$log->getText()}');";
     }
 }

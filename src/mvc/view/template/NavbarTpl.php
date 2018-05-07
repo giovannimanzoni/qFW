@@ -17,18 +17,14 @@ namespace qFW\mvc\view\template;
  */
 abstract class NavbarTpl
 {
-    /** @var string delimiter */
-    protected $del = '';
-
     /** @var string hold html */
     protected $html = '';
 
     /**
      * NavbarTpl constructor.
      *
-     * @param string $del
      */
-    public function __construct(string $del = "\n")
+    public function __construct()
     {
         $html = '
             <!-- top fixed navbar -->

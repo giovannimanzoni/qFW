@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace qFW\log;
 
+use qFW\mvc\controller\lang\ILang;
+
 /**
  * Class AName
  *
@@ -19,17 +21,22 @@ namespace qFW\log;
  */
 abstract class AName implements ILogOutput
 {
-    /** @var string|int user id who generate the log */
+    /** @var string|int User id who generate the log */
     private $uid;
+
+    /** @var \qFW\mvc\controller\lang\ILang  */
+    protected $lang;
 
     /**
      * AName constructor.
      *
-     * @param $uid string|int user id
+     * @param                                $uid
+     * @param \qFW\mvc\controller\lang\ILang $lang
      */
-    public function __construct($uid)
+    public function __construct($uid, ILang $lang)
     {
         $this->uid = $uid;
+        $this->lang = $lang;
     }
 
     /**
@@ -45,8 +52,8 @@ abstract class AName implements ILogOutput
     /**
      * Get class name to pass to __call
      *
-     * @param string $namespace use __NAMESPACE__ for this parameter
-     * @param        $class     object use $this for this parameter
+     * @param string $namespace Use __NAMESPACE__ for this parameter
+     * @param        $class     Object use $this for this parameter
      *
      * @return string
      */
@@ -56,5 +63,15 @@ abstract class AName implements ILogOutput
         $name = str_replace('Name', '', $path);
 
         return "$namespace\\$name\\$name";
+    }
+
+    /**
+     * Return lang
+     *
+     * @return \qFW\mvc\controller\lang\ILang
+     */
+    public function getLang(): ILang
+    {
+        return $this->lang;
     }
 }

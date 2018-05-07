@@ -19,7 +19,6 @@ namespace qFW\mvc\model\httpRequest\verbs;
  */
 class Delete implements IVerbs
 {
-
     /**
      * Delete constructor.
      */

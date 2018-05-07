@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace qFW\mvc\controller\frontController;
 
 use qFW\mvc\controller\errors\FWThrowable;
+use qFW\mvc\controller\lang\ILang;
 use qFW\mvc\controller\routing\Routing;
 
 /**
@@ -20,24 +21,33 @@ use qFW\mvc\controller\routing\Routing;
  */
 class FrontController
 {
+    /** @var  ILang language*/
+    private $lang;
+
+    /** @var string  */
+    private $folder='';
+
+    /** @var bool  */
+    private $isAdmin=true;
+
+    /** @var string  */
+    protected $scriptName='';
+
     /**
      * FrontController constructor.
      *
-     * @param bool $showError
+     * @param \qFW\mvc\controller\lang\ILang $lang
+     * @param bool                           $showError
      */
-    public function __construct(bool $showError = true)
+    public function __construct(ILang $lang, bool $showError = false)
     {
+        $this->lang = $lang;
+        $this->isAdmin = true;
+
         set_exception_handler(array(FWThrowable::class, 'handleException'));
-        //set_error_handler(array(__CLASS__, '_errorHandler')); // serve ? o incluso in quella sopra in PHP7 ?
+        //Set_error_handler(array(__CLASS__, '_errorHandler')); // do we need? or included in the one above in PHP7?
 
-
-        if ($showError) {
-            $opt = '1';
-        } else {
-            $opt = '0';
-        }
-
-        $this->initIni($opt);
+        $this->setInit($showError);
 
         $this->setTimeZone();
 
@@ -45,22 +55,77 @@ class FrontController
     }
 
     /**
+     * Use this function if website is not in document root
+     *
+     * @param string $folder
+     *
+     * @return $this
+     */
+    public function setDomainFolder(string $folder)
+    {
+        $this->folder = $folder;
+        return $this;
+    }
+
+    /**
+     * @param bool $isAdmin
+     *
+     * @return $this
+     */
+    public function isAdmin(bool $isAdmin)
+    {
+        $this->isAdmin = $isAdmin;
+        return $this;
+    }
+
+    /**
      * Run front controller
      */
     public function run()
     {
-        new Routing();
+        $routing=new Routing($this->isAdmin, $this->folder);
+        $this->scriptName=$routing->getScriptName();
+
+        return $this;
     }
 
     /**
      * Set different timezone instead of default
      *
      * @param string $timezone
+     *
+     * @return $this
      */
     public function setTimeZone(string $timezone = 'Europe/Rome')
     {
         date_default_timezone_set($timezone);
+        return $this;
     }
+
+    /**
+     * Return Language
+     *
+     * @return \qFW\mvc\controller\lang\ILang
+     */
+    public function getLang(): ILang
+    {
+        return $this->lang;
+    }
+
+
+    /**
+     * @param bool $showError
+     */
+    private function setInit(bool $showError)
+    {
+        if ($showError) {
+            $opt = '1';
+        } else {
+            $opt = '0';
+        }
+        $this->initIni($opt);
+    }
+
 
     /**
      * @param string $showError

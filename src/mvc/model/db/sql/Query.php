@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace qFW\mvc\model\db\sql;
 
 use qFW\mvc\controller\dataTypes\UtString;
+use qFW\mvc\controller\lang\ILang;
 
 /**
  * Class Query
@@ -22,14 +23,24 @@ class Query
     /** @var null|\PDO */
     protected $pdo = null;
 
+    /** @var \qFW\mvc\controller\vocabulary\Voc */
+    private $voc;
+
+    /** @var \qFW\mvc\controller\dataTypes\UtString */
+    private $utStr;
+
     /**
      * Query constructor.
      *
-     * @param \PDO $pdo
+     * @param \PDO                           $pdo
+     * @param \qFW\mvc\controller\lang\ILang $lang
      */
-    public function __construct(\PDO $pdo)
+    public function __construct(\PDO $pdo, ILang $lang)
     {
         $this->pdo = $pdo;
+        $vocLang = 'qFW\mvc\controller\vocabulary\Voc' . $lang->getLang();
+        $this->voc = new $vocLang();
+        $this->utStr = new UtString($lang);
     }
 
     /**
@@ -39,48 +50,52 @@ class Query
      * @param string $orderby
      *
      * @return array
+     * @throws \Exception
      */
     public function getStar(string $tbl, $orderby = ''): array
     {
-
-        $valori = array();
+        $res = array();
 
         try {
-            $sql = 'SELECT * FROM ' . self::formatIdentifier($tbl);
+            $sql = 'SELECT * FROM ' . $this->formatIdentifier($tbl);
 
             if ($orderby != '') {
                 $sql .= " ORDER BY $orderby";
+            } else {
+                /*Ok*/
             }
 
             $result = $this->pdo->prepare($sql);
             $result->execute();
-            $valori = $result->fetchAll();
+            $res = $result->fetchAll();
         } catch (\PDOException $e) {
-            self::pdoExceptionM($e, __METHOD__);
+            $this->pdoExceptionM($e, __METHOD__);
         }
-        return $valori;
+        return $res;
     }
 
     /**
-     *
      * @param string $key
      * @param string $value
      * @param string $table
      * @param string $orderby
      *
      * @return array
+     * @throws \Exception
      */
     public function fetchKeyPair(string $key, string $value, string $table, string $orderby = '2'): array
     {
         $data = array();
 
+        $sql = 'SELECT ' . $this->formatIdentifier($key) . ', ' . $this->formatIdentifier($value)
+            . ' as value from '
+            . $this->formatIdentifier($table) . " ORDER BY $orderby";
+
         try {
-            $sql = 'SELECT ' . self::formatIdentifier($key) . ', ' . self::formatIdentifier($value) . ' as valore from '
-                . self::formatIdentifier($table) . " ORDER BY $orderby";
             $result = $this->pdo->query($sql);
             $data = $result->fetchAll(\PDO::FETCH_KEY_PAIR);
         } catch (\PDOException $e) {
-            self::pdoExceptionM($e, __METHOD__);
+            $this->pdoExceptionM($e, __METHOD__);
         }
 
         return $data;
@@ -95,6 +110,7 @@ class Query
      * @param        $whereColValue
      *
      * @return array
+     * @throws \Exception
      */
     public function fetchKeyPairWhere(
         string $key,
@@ -106,51 +122,54 @@ class Query
     ): array {
         $data = array();
 
-        $key = self::formatIdentifier($key);
-        $value = self::formatIdentifier($value);
-        $table = self::formatIdentifier($table);
-        $whereColName = self::formatIdentifier($whereColName);
+        $key = $this->formatIdentifier($key);
+        $value = $this->formatIdentifier($value);
+        $table = $this->formatIdentifier($table);
+        $whereColName = $this->formatIdentifier($whereColName);
 
         try {
-            $sql = "SELECT $key, $value as valore from $table WHERE $whereColName = :colValue ORDER BY $orderby";
+            $sql = "SELECT $key, $value as value from $table WHERE $whereColName = :colValue ORDER BY $orderby";
             $result = $this->pdo->prepare($sql);
             if (is_int($whereColValue)) {
                 $result->bindValue(':colValue', $whereColValue, \PDO::PARAM_INT);
             } elseif (is_string($whereColValue)) {
                 $result->bindValue(':colValue', $whereColValue, \PDO::PARAM_STR);
+            } else {
+                throw new \Exception('Where value is not string nor int type.');
             }
             $result->execute();
 
             $data = $result->fetchAll(\PDO::FETCH_KEY_PAIR);
         } catch (\PDOException $e) {
-            self::pdoExceptionM($e, __METHOD__);
+            $this->pdoExceptionM($e, __METHOD__);
         }
 
         return $data;
     }
 
     /**
-     * Funzione di utility per eseguire query select con codice già impostato
+     * Run select query with pre prepared sql code
      *
      * @param string $tbl
-     * @param string $valore
+     * @param string $value
      *
      * @return array
+     * @throws \Exception
      */
-    public function getValues(string $tbl, string $valore): array
+    public function getValues(string $tbl, string $value): array
     {
-        $valori = array();
+        $res = array();
 
         try {
-            // backticks applicato su valore in fase di chiamata della funzione
-            $sql = "SELECT $valore from " . self::formatIdentifier($tbl);
+            // Backticks applied on value during the function call
+            $sql = "SELECT $value from " . $this->formatIdentifier($tbl);
             $result = $this->pdo->query($sql);
-            $valori = $result->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $result->fetchAll(\PDO::FETCH_COLUMN);
         } catch (\PDOException $e) {
-            self::pdoExceptionM($e, __METHOD__);
+            $this->pdoExceptionM($e, __METHOD__);
         }
 
-        return $valori;
+        return $res;
     }
 
     /**
@@ -158,7 +177,8 @@ class Query
      * @param string $select
      * @param        $whereIdName
      *
-     * @return float|int|string
+     * @return float|int|mixed|string
+     * @throws \Exception
      */
     public function getValueWhere(string $tbl, string $select, $whereIdName)
     {
@@ -166,11 +186,11 @@ class Query
 
         try {
             if (is_numeric($whereIdName)) {
-                $sql = 'SELECT ' . self::formatIdentifier($select) . ' from ' .
-                    self::formatIdentifier($tbl) . ' WHERE `id` = :where LIMIT 1';
+                $sql = 'SELECT ' . $this->formatIdentifier($select) . ' from ' .
+                    $this->formatIdentifier($tbl) . ' WHERE `id` = :where LIMIT 1';
             } else {
-                $sql = 'SELECT ' . self::formatIdentifier($select) .
-                    ' from ' . self::formatIdentifier($tbl) . ' WHERE `nome` = :where LIMIT 1';
+                $sql = 'SELECT ' . $this->formatIdentifier($select) .
+                    ' from ' . $this->formatIdentifier($tbl) . ' WHERE `c_name` = :where LIMIT 1';
             }
 
             $result = $this->pdo->prepare($sql);
@@ -183,29 +203,33 @@ class Query
             $result->execute();
             $str = $result->fetchColumn();
         } catch (\PDOException $e) {
-            self::pdoExceptionM($e, __METHOD__);
+            $this->pdoExceptionM($e, __METHOD__);
         }
 
         if ($str === false) {
-            $str = '';
-        } // se non trova riferimenti, ritorna stringa vuota
+            $str = ''; // If it does not find references, it returns an empty string
+        } else {
+            /*Ok*/
+        }
 
         if (is_numeric($str)) {
             $tryFloat = floatval($str);
             $tryInt = intval($str);
-            if (UtString::areEqual($tryFloat, $tryInt)) {
-                // preserva gli zeri iniziali se presenti tornando una stringa, altrimenti torna numero
+            if ($this->utStr->areEqual($tryFloat, $tryInt)) {
+                // It preserves the initial zeroes if present returning a string, otherwise it returns number
                 //    - https://www.askingbox.com/tutorial/php-get-first-digit-of-number-or-string
                 $tmp = $str . '';
                 if ($tmp[0] != '0') {
                     $str = intval($str);
+                } else {
+                    /*Ok*/
                 }
             } else {
                 $str = floatval($str);
             }
         }
 
-        return $str; // can be string, integer, null
+        return $str; // Can be string, integer or null
     }
 
     /**
@@ -214,17 +238,20 @@ class Query
      * @param        $whereIdName
      * @param string $format
      *
-     * @return float|int|string
+     * @return float|int|mixed|string
+     * @throws \Exception
      */
     public function getDataWhere(string $tbl, string $select, $whereIdName, string $format = "%d/%m/%Y")
     {
         try {
             if (is_numeric($whereIdName)) {
-                $sql = 'SELECT DATE_FORMAT(' . self::formatIdentifier($select) . ',"'
-                    . $format . '") from ' . self::formatIdentifier($tbl) . ' WHERE `id` = :where LIMIT 1';
+                $sql = 'SELECT DATE_FORMAT(' . $this->formatIdentifier($select) . ',"'
+                    . $format . '") from ' . $this->formatIdentifier($tbl) . ' WHERE `id` = :where LIMIT 1';
+            } elseif (is_string($whereIdName)) {
+                $sql = 'SELECT DATE_FORMAT(' . $this->formatIdentifier($select) . ',"' . $format . '") from '
+                    . $this->formatIdentifier($tbl) . ' WHERE `c_name` = :where LIMIT 1';
             } else {
-                $sql = 'SELECT DATE_FORMAT(' . self::formatIdentifier($select) . ',"' . $format . '") from '
-                    . self::formatIdentifier($tbl) . ' WHERE `nome` = :where LIMIT 1';
+                throw new \Exception('$whereIdName not int nor string type.');
             }
 
             $result = $this->pdo->prepare($sql);
@@ -237,24 +264,24 @@ class Query
             $result->execute();
             $str = $result->fetchColumn();
         } catch (\PDOException $e) {
-            self::pdoExceptionM($e, __METHOD__);
+            $this->pdoExceptionM($e, __METHOD__);
         }
 
         if ($str === false) {
-            $str = '';
-        } // se non trova riferimenti, ritorna stringa vuota
-
-        if (is_numeric($str)) {
+            $str = ''; // If it does not find references, it returns an empty string
+        } elseif (is_numeric($str)) {
             $tryFloat = floatval($str);
             $tryInt = intval($str);
-            if (UtString::areEqual($tryFloat, $tryInt)) {
+            if ($this->utStr->areEqual($tryFloat, $tryInt)) {
                 $str = intval($str);
             } else {
                 $str = floatval($str);
             }
+        } else {
+            /*Ok*/
         }
 
-        return $str; // can be string, integer, null
+        return $str; // Can be string, integer or null
     }
 
     /**
@@ -264,25 +291,27 @@ class Query
      * @param        $valore
      *
      * @return bool
+     * @throws \Exception
      */
     public function updateValueWhere(string $tbl, string $colDestinazione, $rigaRiferimento, $valore): bool
     {
-        $esito = false;
+        $res = false;
 
         try {
             if (is_numeric($rigaRiferimento)) {
-                $sql = 'UPDATE ' . self::formatIdentifier($tbl)
-                    . ' SET ' . self::formatIdentifier($colDestinazione)
+                $sql = 'UPDATE ' . $this->formatIdentifier($tbl)
+                    . ' SET ' . $this->formatIdentifier($colDestinazione)
                     . " = '$valore' WHERE `id` = :where LIMIT 1";
+            } elseif (is_string($rigaRiferimento)) {
+                $sql = 'UPDATE ' . $this->formatIdentifier($tbl)
+                    . ' SET ' . $this->formatIdentifier($colDestinazione)
+                    . " = '$valore' WHERE `c_name` = :where LIMIT 1";
             } else {
-                $sql = 'UPDATE ' . self::formatIdentifier($tbl)
-                    . ' SET ' . self::formatIdentifier($colDestinazione)
-                    . " = '$valore' WHERE `nome` = :where LIMIT 1";
+                throw new \Exception('$rigaRiferimento not int nor string type.');
             }
 
             $result = $this->pdo->prepare($sql);
 
-            //TODO: penso sia una cagata questa... fare il bind in base al tipo di dato.. dovrei fare il bind a priori.
             if (is_numeric($rigaRiferimento)) {
                 $result->bindValue(':where', $rigaRiferimento, \PDO::PARAM_INT);
             } else {
@@ -290,11 +319,11 @@ class Query
             }
 
             $result->execute();
-            $esito = true;
+            $res = true;
         } catch (\PDOException $e) {
-            self::pdoExceptionM($e, __METHOD__);
+            $this->pdoExceptionM($e, __METHOD__);
         }
-        return $esito;
+        return $res;
     }
 
     /**
@@ -302,27 +331,29 @@ class Query
      * @param string $orderby
      *
      * @return array
+     * @throws \Exception
      */
     public function getStarEnabled(string $tbl, $orderby = ''): array
     {
-        $valori = array();
+        $res = array();
 
         try {
-            $sql = "SELECT  * FROM " . self::formatIdentifier($tbl) . ' WHERE `enabled` = "1"';
+            $sql = "SELECT  * FROM " . $this->formatIdentifier($tbl) . ' WHERE `enabled` = "1"';
 
             if ($orderby != '') {
                 $sql .= " ORDER BY $orderby";
+            } else {
+                /*Ok*/
             }
-
 
             $result = $this->pdo->prepare($sql);
             $result->execute();
-            $valori = $result->fetchAll();
+            $res = $result->fetchAll();
         } catch (\PDOException $e) {
-            self::pdoExceptionM($e, __METHOD__);
+            $this->pdoExceptionM($e, __METHOD__);
         }
 
-        return $valori;
+        return $res;
     }
 
     /**
@@ -332,30 +363,35 @@ class Query
      * @param string $orderby
      *
      * @return array
+     * @throws \Exception
      */
     public function getStarWhere(string $tbl, string $whereName, $whereValue, $orderby = ''): array
     {
-        $valori = array();
+        $res = array();
 
         try {
-            $sql = 'SELECT * from ' . self::formatIdentifier($tbl)
-                . ' WHERE ' . self::formatIdentifier($whereName) . " = $whereValue";
+            $sql = 'SELECT * from ' . $this->formatIdentifier($tbl)
+                . ' WHERE ' . $this->formatIdentifier($whereName) . " = $whereValue";
 
             if ($orderby != '') {
                 $sql .= " ORDER BY $orderby";
+            } else {
+                /*Ok*/
             }
 
             $result = $this->pdo->prepare($sql);
             $result->execute();
-            $valori = $result->fetchAll();
+            $res = $result->fetchAll();
         } catch (\PDOException $e) {
-            self::pdoExceptionM($e, __METHOD__);
+            $this->pdoExceptionM($e, __METHOD__);
         }
-        return $valori;
+        return $res;
     }
 
     /**
      * @param array $sql
+     *
+     * @throws \Exception
      */
     public function doSql(array $sql)
     {
@@ -364,9 +400,9 @@ class Query
             try {
                 $s = $this->pdo->prepare($query);
                 $s->execute();
-                echo "Eseguita query $i<br>";
+                echo "Performed query $i<br>";
             } catch (\PDOException $e) {
-                self::pdoExceptionM($e, __METHOD__);
+                $this->pdoExceptionM($e, __METHOD__);
             }
         }
     }
@@ -376,13 +412,14 @@ class Query
      * @param $tbl
      *
      * @return bool
+     * @throws \Exception
      */
-    public function eliminaById($id, $tbl): bool
+    public function deleteById($id, $tbl): bool
     {
-        $esito = false;
+        $res = false;
 
         try {
-            $sql = 'DELETE FROM ' . self::formatIdentifier($tbl) . '
+            $sql = 'DELETE FROM ' . $this->formatIdentifier($tbl) . '
 			WHERE
 			`id` = :id';
 
@@ -391,32 +428,33 @@ class Query
             $s->bindValue(':id', $id, \PDO::PARAM_INT);
 
             $s->execute();
-            $esito = true;
+            $res = true;
         } catch (\PDOException $e) {
-            self::pdoExceptionM($e, __METHOD__);
+            $this->pdoExceptionM($e, __METHOD__);
         }
-        return $esito;
+        return $res;
     }
 
     /**
      * @param string $tbl
      * @param string $column
      *
-     * @return int
+     * @return int|mixed
+     * @throws \Exception
      */
-    public function sommaColonnaPrezziVarchar(string $tbl, string $column)
+    public function sumColumnPricesVarchar(string $tbl, string $column)
     {
         $sum = 0;
         $sql = 'SELECT ROUND(SUM(   cast(REPLACE('
-            . self::formatIdentifier($column) . ', ",", ".") as decimal(19,2))   ),2) from '
-            . self::formatIdentifier($tbl);
+            . $this->formatIdentifier($column) . ', ",", ".") as decimal(19,2))   ),2) from '
+            . $this->formatIdentifier($tbl);
 
         try {
             $s = $this->pdo->prepare($sql);
             $s->execute();
             $sum = $s->fetch(\PDO::FETCH_COLUMN);
         } catch (\PDOException $e) {
-            self::pdoExceptionM($e, __METHOD__);
+            $this->pdoExceptionM($e, __METHOD__);
         }
         return $sum;
     }
@@ -426,25 +464,31 @@ class Query
      *
      * @param \PDOException $e
      * @param string        $functionName
+     *
+     * @throws \Exception
      */
     public function pdoExceptionM(\PDOException $e, string $functionName)
     {
+        $errMex = '';
         $code = $e->getCode();
 
-        if ($code == 23000) { // impossibile inserire per vincolo di chiave unica
-            $_SESSION['err'] .= "$functionName() Inserimento di informazioni già presenti.";
+        if ($code == 23000) {
+            $errMex = "$functionName() impossible to insert by single key constraint.";
         } else {
-            $_SESSION['err'] .= $functionName . '() ' . $e->getMessage();
+            $errMex = "$functionName() {$e->getMessage()}";
         }
 
-        if ($code != 1142) { // permessi non sufficenti per operare sulla tabella
-            // se in transaction, rollback. ovviamente non ha operato sulla tabella se il code fosse 1142 e il
-            // rollback fallirebbe
+        if ($code != 1142) {
+            // Permits not sufficient to operate on the table.
+            // If in transaction, rollback. obviously it did not work on the table if the code was 1142 and the
+            //      rollback would fail
             if ($this->pdo->inTransaction()) {
-                $_SESSION['err'] .= 'Ripristino stato database eseguito.';
+                $errMex .= $this->voc->dbStateRestore();
                 $this->pdo->rollBack();
             }
         }
+
+        throw new \Exception($errMex);
     }
 
     /**
@@ -455,19 +499,22 @@ class Query
     {
         $code = $e->getCode();
 
-        if ($code == 23000) { // impossibile inserire per vincolo di chiave unica
-            echo "$functionName() Inserimento di informazioni già presenti.";
+        if ($code == 23000) {
+            echo "$functionName() " . $this->voc->queryErr23000();
         } else {
             echo $functionName . '() ' . $e->getMessage();
         }
 
-        if ($code != 1142) { // permessi non sufficenti per operare sulla tabella
-            // se in transaction, rollback. ovviamente non ha operato sulla tabella se il code fosse 1142 e il
-            // rollback fallirebbe
+        if ($code != 1142) {
+            // Permits not sufficient to operate on the table.
+            // If in transaction, rollback. obviously it did not work on the table if the code was 1142 and the
+            //      rollback would fail
             if ($this->pdo->inTransaction()) {
-                echo 'Ripristino stato database eseguito.';
+                echo $this->voc->dbStateRestore();
                 $this->pdo->rollBack();
             }
+        } else {
+            /*Ok*/
         }
     }
 
@@ -478,6 +525,8 @@ class Query
     {
         if ($this->pdo->inTransaction()) {
             $this->pdo->commit();
+        } else {
+            /*Ok*/
         }
     }
 

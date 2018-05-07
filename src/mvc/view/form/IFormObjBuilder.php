@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace qFW\mvc\view\form;
 
 use qFW\log\ILogOutput;
+use qFW\mvc\controller\lang\ILang;
 
 /**
  * Interface IFormObjBuilder
@@ -24,7 +25,7 @@ interface IFormObjBuilder
     /**
      * IFormObjBuilder constructor.
      *
-     * @param \qFW\log\ILogOutput $outputLog
+     * @param \qFW\log\ILogOutput            $outputLog
      */
     public function __construct(ILogOutput $outputLog);
 
@@ -38,14 +39,14 @@ interface IFormObjBuilder
     public function getElements(string $pageName): array;
 
     /**
-     * get name of all pages
+     * Get name of all pages
      *
      * @return array
      */
     public function getPagesName(): array;
 
     /**
-     * builder
+     * Builder
      *
      * @return mixed
      */
@@ -61,7 +62,7 @@ interface IFormObjBuilder
     public function addPage(IFormPage $page): FormObjBuilder;
 
     /***********************************
-     * proprietà del form
+     * Properties of the form
      **********************************/
     /**
      * Set required symbol for the label

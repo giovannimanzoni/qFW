@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace qFW\mvc\view\template\content;
 
 use qFW\log\HtmlName;
+use qFW\mvc\controller\lang\ILang;
+use qFW\mvc\view\form\elements\input\InputPassword;
 use qFW\mvc\view\form\elements\input\InputSubmit;
 use qFW\mvc\view\form\elements\input\InputText;
 use qFW\mvc\view\form\elements\FormInput;
@@ -26,17 +28,27 @@ use qFW\mvc\view\form\FormPage;
  */
 class LoginTpl extends CHtml implements ITplLogin
 {
-    /** @var \qFW\log\HtmlName logger engine */
+    /** @var \qFW\log\HtmlName Logger engine */
     private $logger;
+
+    /** @var \qFW\mvc\controller\lang\ILang */
+    private $lang;
+
+    /** @var string  */
+    private $actionpage='';
 
     /**
      * LoginTpl constructor.
      *
-     * @param string $htmlPwdDimenticata
+     * @param string                         $htmlPwdLost
+     * @param \qFW\mvc\controller\lang\ILang $lang
+     * @param string                         $actionpage
      */
-    public function __construct(string $htmlPwdDimenticata)
+    public function __construct(string $htmlPwdLost, ILang $lang, string $actionpage)
     {
-        $this->logger = new HtmlName(0);
+        $this->lang = $lang;
+        $this->logger = new HtmlName(0, $lang);
+        $this->actionpage = $actionpage;
 
         $this->html =
             '<div class="row">
@@ -47,10 +59,7 @@ class LoginTpl extends CHtml implements ITplLogin
         $this->html .= '
                         <div class="clearfix"></div>
                         <hr>
-                        <h3>Password dimenticata?</h3>
-                        <p>
-                            ' . $htmlPwdDimenticata . '
-                        </p>
+                            ' . $htmlPwdLost . '
                     </div>
                 </div>
             </div>';
@@ -63,18 +72,20 @@ class LoginTpl extends CHtml implements ITplLogin
      */
     private function formLogin(): string
     {
-        $page = new FormPage(' ', $this->logger);
+        $page = new FormPage($this->logger);
         // @codingStandardsIgnoreStart
         $page
             ->addElement((new FormInput('username', new InputText(), true))
                              ->setLabel('Username')
                              ->setPrepend('fa fa-user')
                              ->setElementRowClass('col-xs-12')
+                             ->setElementRatio(8)
             )
-            ->addElement((new FormInput('password', new InputText(), true))
+            ->addElement((new FormInput('password', new InputPassword(), true))
                              ->setLabel('Password')
                              ->setPrepend('fa fa-eye-slash')
                              ->setElementRowClass('col-xs-12')
+                             ->setElementRatio(8)
             )
             ->addElement((new FormInput('formLogin', new InputHidden(), true))
                              ->setValue('1')
@@ -89,7 +100,11 @@ class LoginTpl extends CHtml implements ITplLogin
             ->addPage($page)
             ->build();
 
-        $form = new FormObj('frmLogin', $formRecipe, '/trylogin.php', $this->logger);
+        $form = new FormObj(
+            $formRecipe,
+            $this->actionpage,
+            $this->logger
+        );
 
         return $form->show();
     }

@@ -17,7 +17,7 @@ class TestMultipart extends TestCase
      */
     public function testGetMultipart()
     {
-        $val= new Multipart();
-        $this->assertEquals('multipart/form-data',$val->getCode());
+        $val = new Multipart();
+        $this->assertEquals('multipart/form-data', $val->getCode());
     }
 }

@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace qFW\mvc\view\form\elements;
 
+use qFW\mvc\controller\lang\LangEn;
+use qFW\mvc\controller\vocabulary\Voc;
 use qFW\mvc\view\form\elements\input\IFormInput;
 use qFW\mvc\view\form\TError;
 use qFW\mvc\view\form\TGlobalAttributes;
@@ -24,43 +26,50 @@ use qFW\mvc\controller\dataTypes\UtString;
  */
 class FormInput implements IFormElements
 {
-    // specific to input
-    /** @var bool  hold autofocus property */
+    // Specific to input
+    /** @var bool Hold autofocus property */
     private $autofocus = false;
 
-    /** @var bool  hold disabled property */
+    /** @var bool Hold disabled property */
     private $disabled = false;
 
-    /** @var bool  hold multiple property */
+    /** @var bool Hold multiple property */
     private $multiple = false;
 
-    /** @var int  hold size property */
+    /** @var int Hold size property */
     private $size = 0;
 
-    /** @var int  hold max lenght property */
+    /** @var int Hold max lenght property */
     private $maxLength = 0;
 
-    //checkbox
-    /** @var bool  hold checked property */
+    // Checkbox
+    /** @var bool Hold checked property */
     private $checkedProp = false;
 
-    /** @var string  hold element type */
+    /** @var string Hold element type */
     private $strategy;
 
-    /** @var string|int  hold placeholder property */
+    /** @var string|int Hold placeholder property */
     private $placeholder = '';
 
-    /** @var string|int  hold value property */
+    /** @var string|int Hold value property */
     private $value = '';
 
-    /** @var string  hold html to prepend to the code */
+    /** @var string Hold html to prepend to the code */
     private $prepend = '';
 
-    /** @var string  hold html to append to the code */
+    /** @var string Hold html to append to the code */
     private $append = '';
 
-    /** @var bool  hold read only property */
+    /** @var bool Hold read only property */
     private $readonly = false;
+
+
+    /** @var \qFW\mvc\controller\dataTypes\UtString */
+    private $utStr;
+
+    /** @var \qFW\mvc\controller\vocabulary\Voc */
+    private $voc;
 
     use TError;
     use TFormObj;
@@ -71,9 +80,9 @@ class FormInput implements IFormElements
     /**
      * FormInput constructor.
      *
-     * @param string                                       $id       html id
-     * @param \qFW\mvc\view\form\elements\input\IFormInput $strategy element type
-     * @param bool                                         $required true if it is required
+     * @param string                                       $id
+     * @param \qFW\mvc\view\form\elements\input\IFormInput $strategy
+     * @param bool                                         $required
      */
     public function __construct(string $id, IFormInput $strategy, bool $required)
     {
@@ -81,11 +90,13 @@ class FormInput implements IFormElements
         $this->name = $id;
         $this->strategy = $strategy->getType();
         $this->required = $required;
+        $this->voc = new Voc();
+        $this->utStr = new UtString(new LangEn());
     }
 
 
     /*********************************************************************************************************
-     * metodi specifici di input
+     * Specific Methods for input element
      ********************************************************************************************************/
     /**
      * Set placeholder
@@ -211,7 +222,7 @@ class FormInput implements IFormElements
     /**
      * Set html name for this element
      *
-     * @param string $name name
+     * @param string $name Name
      *
      * @return $this
      */
@@ -239,7 +250,7 @@ class FormInput implements IFormElements
     }
 
     /*********************************************************************************************************
-     * metodi dell'interfaccia IFormElements
+     * Methods for IFormElements interfaces
      ********************************************************************************************************/
 
     /**
@@ -259,29 +270,33 @@ class FormInput implements IFormElements
      */
     public function check(): bool
     {
-        // @todo spostare in classe fatta diversamente
+        // @todo move to class made differently
         if ($this->checkedProp) {
-            if (UtString::areEqual($this->strategy, 'checkbox') ||
-                UtString::areEqual($this->strategy, 'radio')
+            if ($this->utStr->areEqual($this->strategy, 'checkbox') ||
+                $this->utStr->areEqual($this->strategy, 'radio')
             ) {
                 /* ok */
             } else {
-                $this->addLog("id {$this->id}: proprietà checked impostata su elemento che non lo ammette.");
+                $this->addLog("id {$this->id}: _VOC_", $this->voc->formPropertyCheckedErr());
             }
+        } else {
+            /*Ok*/
         }
+
         if (!is_numeric($this->maxLength)) {
-            $this->addLog("id {$this->id}: proprietà maxLength impostata di tipo non numerico.");
+            $this->addLog("id {$this->id}: _VOC_", $this->voc->formPropertyMaxLenghtErr());
+        } else {
+            /*Ok*/
         }
 
-        return $this->getCheckEsito();
+        return $this->getCheckOutcome();
     }
-
 
     /**
      * Make html for this form element
      *
-     * @todo migliorare, esegue controlli su opzioni che alcuni titpi di oggetti non hanno..
-     *       per es. checkbox non ha maxlength ne multiple..
+     * @todo Improve, perform checks on options that some objects do not have..
+     *       for ex. checkbox has no maxlength nor multiple..
      *
      * @return string
      */
@@ -291,6 +306,8 @@ class FormInput implements IFormElements
 
         if (!$this->checkedProp) {
             $this->check();
+        } else {
+            /*Ok*/
         }
 
         if ($this->TErrorValid) {
@@ -306,14 +323,19 @@ class FormInput implements IFormElements
 
             // se checkbox aggiunge testo
             // @todo: if (isCheckBox($this))
-            if (UtString::areEqual($this->strategy, 'checkbox') ||
-                UtString::areEqual($this->strategy, 'radio')
+            if ($this->utStr->areEqual($this->strategy, 'checkbox') ||
+                $this->utStr->areEqual($this->strategy, 'radio')
             ) {
                 $html .= "<span class='vertCenterFormText'>{$this->defaultText}</span>";
+            } else {
+                /*Ok*/
             }
 
             $html .= '</div>';
+        } else {
+            /*Ok*/
         }
+
         return $html;
     }
 
@@ -329,14 +351,12 @@ class FormInput implements IFormElements
         $html = '';
         if ($txt != '') {
             $html .= "<span class='input-group-addon'>";
-            if ($this->isFaIcon($this->prepend)) {
-                $html .= "<i class='{$this->prepend} fa-lg'></i>";
+            if ($this->isFaIcon($txt)) {
+                $html .= "<i class='$txt fa-lg'></i>";
+            } elseif ($this->isGlyphiconIcon($txt)) {
+                $html .= "<i class='glyphicon $txt'></i>";
             } else {
-                if ($this->isGlyphiconIcon($this->prepend)) {
-                    $html .= "<i class=glyphicon '{$this->prepend}' ></i>";
-                } else {
-                    $html .= $this->prepend;
-                }
+                $html .= $txt;
             }
             $html .= '</span>';
         }
@@ -346,13 +366,13 @@ class FormInput implements IFormElements
     /**
      * Check if given string is a fa icon
      *
-     * @param string $txt string to check
+     * @param string $txt String to check
      *
      * @return bool
      */
     private function isFaIcon(string $txt): bool
     {
-        return UtString::strSearch($txt, ' fa-');
+        return $this->utStr->strSearch($txt, ' fa-'); // fas far fab fal...
     }
 
     /**
@@ -364,7 +384,7 @@ class FormInput implements IFormElements
      */
     private function isGlyphiconIcon(string $txt): bool
     {
-        return UtString::strSearch($txt, 'glyphicon-');
+        return $this->utStr->strSearch($txt, 'glyphicon glyphicon-');
     }
 
     /**
@@ -377,37 +397,55 @@ class FormInput implements IFormElements
         $html = '';
         if ($this->required) {
             $html .= 'required="required" ';
+        } else {
+            /*Ok*/
         }
         if ($this->autofocus) {
             $html .= 'autofocus="autofocus" ';
+        } else {
+            /*Ok*/
         }
         if ($this->disabled) {
             $html .= 'disabled="disabled" ';
+        } else {
+            /*Ok*/
         }
         if ($this->multiple) {
             $html .= 'multiple="multiple" ';
+        } else {
+            /*Ok*/
         }
         if ($this->checkedProp) {
             $html .= 'checked="checked" ';
+        } else {
+            /*Ok*/
         }
 
         if ($this->placeholder != '') {
             $html .= 'placeholder="' . $this->placeholder . '" ';
+        } else {
+            /*Ok*/
         }
         $html .= "value='{$this->value}' ";
         if ($this->readonly) {
             $html .= 'readonly="readonly" ';
+        } else {
+            /*Ok*/
         }
         if ($this->size) {
             $html .= "size='{$this->size}' ";
+        } else {
+            /*Ok*/
         }
         if ($this->maxLength) {
             $html .= "maxlength='{$this->maxLength}' ";
+        } else {
+            /*Ok*/
         }
 
         $classes = "{$this->class} ";
-        if (UtString::areEqual($this->strategy, 'checkbox') ||
-            UtString::areEqual($this->strategy, 'radio')
+        if ($this->utStr->areEqual($this->strategy, 'checkbox') ||
+            $this->utStr->areEqual($this->strategy, 'radio')
         ) {
             /* ok nothing to do*/
         } else {
@@ -415,6 +453,8 @@ class FormInput implements IFormElements
         }
         if ($classes != '') {
             $this->setClass($classes);
+        } else {
+            /*Ok*/
         }
 
         $html .= $this->getGlobalAttributes();

@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace qFW\log;
 
+use qFW\mvc\controller\lang\ILang;
+
 /**
  * Class ALogger
  *
@@ -19,46 +21,70 @@ namespace qFW\log;
  */
 abstract class ALogger implements ILogger
 {
-    /** @var array hold all logs */
-    protected $logArray;
+
+    /** @var  vocabulary */
+    protected $voc;
+
+    /** @var string */
+    protected $lang = '';
 
     /**
      * ALogger constructor.
      *
-     * @param string|int $uid  user id who generate logs events
+     * @param        $uid
+     * @param string $lang
      */
-    public function __construct($uid)
+    public function __construct($uid, string $lang)
     {
-        $this->logArray['uid'] = $uid;
+        $_SESSION['ALOGGER']['uid'] = $uid;
+        $this->lang = $lang;
     }
 
     /**
      * Store new log in memory
      *
-     * @param \qFW\log\ILogMessage $log log message
+     * @param \qFW\log\ILogMessage $log Log message
      */
     public function log(ILogMessage $log)
     {
-        $this->logArray['logs'][] = $log;
+        $_SESSION['ALOGGER']['logs'][] = $log;
     }
 
     /**
      * Get how may logs are stored
      *
-     * @return int number of stored logs
+     * @return int Number of stored logs
      */
     public function getLogsQty(): int
     {
-        if (array_key_exists('logs', $this->logArray)) {
-            $qty = count($this->logArray['logs']);
+        $qty = 0;
+        if ($_SESSION['ALOGGER']) {
+            if (array_key_exists('logs', $_SESSION['ALOGGER'])) {
+                $qty = count($_SESSION['ALOGGER']['logs']);
+            } else {
+                /*on non esiste chiave*/
+            }
         } else {
-            $qty = 0;
+            /*ok non ci sono messaggi di log*/
         }
         return $qty;
     }
 
     /**
+     * @param \qFW\mvc\controller\lang\ILang $lang
+     */
+    public function setLang(ILang $lang)
+    {
+        $this->lang = $lang;
+    }
+
+
+    /**
+     * Set lang in a separate method for not affect too many others method and avoid write in every form element the
+     *      lang of log messages
+     *
      * Return stored logs. This method must be implemented
+     *
      *
      * @return string
      */

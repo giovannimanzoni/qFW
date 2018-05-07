@@ -19,17 +19,12 @@ use qFW\mvc\view\pages\IHtml;
  */
 class PageEnd implements IHtml
 {
-    /** @var string hold delimiter */
-    private $del = '';
 
     /**
      * PageEnd constructor.
-     *
-     * @param string $del
      */
-    public function __construct(string $del = "\n")
+    public function __construct()
     {
-        $this->del = $del;
     }
 
     /**
@@ -45,8 +40,6 @@ class PageEnd implements IHtml
      */
     private function endPanelJs(): string
     {
-        $html = "<script defer src='https://use.fontawesome.com/releases/v5.0.6/js/all.js'></script> {$this->del}";
-
-        return $html;
+        return '';
     }
 }

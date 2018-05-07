@@ -1,0 +1,33 @@
+
+
+.ui-state-disabled, .ui-widget-content .ui-state-disabled, .ui-widget-header .ui-state-disabled {
+    opacity : 1;
+}
+
+#ui-id-1{
+    color: #fff;
+    background-color: #23BC36;
+}
+
+#ui-id-2{
+    color: #fff;
+    background-color: #8F958F;
+}
+
+#ui-id-3{
+    color: #fff;
+    background-color: #8F958F;
+}
+
+
+.tabCurrent{
+    background-color: #23BC36 !important;
+}
+
+.tabOk{
+    background-color: #077406 !important;
+}
+
+.tabHidden{
+    background-color: #8F958F !important;
+}

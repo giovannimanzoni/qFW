@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace qFW\mvc\view\form\elements;
 
+use qFW\mvc\controller\lang\ILang;
+use qFW\mvc\controller\vocabulary\Voc;
 use qFW\mvc\view\form\TError;
 use qFW\mvc\view\form\TGlobalAttributes;
 
@@ -22,8 +24,11 @@ use qFW\mvc\view\form\TGlobalAttributes;
  */
 class FormText implements IFormElements
 {
-    /** @var string  text to show*/
-    private $value='';
+    /** @var string  text to show */
+    private $value = '';
+
+    /** @var \qFW\mvc\controller\vocabulary\Voc */
+    private $voc;
 
     use TError;
     use TGlobalAttributes;
@@ -37,30 +42,31 @@ class FormText implements IFormElements
     public function __construct(string $value)
     {
         $this->value = $value;
+        $this->voc = new Voc();
     }
 
     /*********************************************************************************************************
-     * metodi definiti nell'interfaccia ma non usati @codingStandardsIgnoreStart
+     * Methods defined in the interface but not used @codingStandardsIgnoreStart
      ********************************************************************************************************/
 
     public function setDefaultValue(int $defaultValue)
     {
-        $this->addLog('setDefaultValue non ha senso per l\'oggetto FormText.');
+        $this->addLog('setDefaultValue not used for this form element.');
     }
 
     public function setLabel(string $label)
     {
-        $this->addLog('setDefaultValue non ha senso per l\'oggetto FormText.');
+        $this->addLog('setDefaultValue not used for this form element.');
     }
 
     public function setLabelOnTop()
     {
-        $this->addLog('labelOnTop non ha senso per l\'oggetto FormText.');
+        $this->addLog('labelOnTop not used for this form element.');
     }
 
     public function setDefaultText(string $text)
     {
-        $this->addLog('setDefaultText non ha senso per l\'oggetto FormText.');
+        $this->addLog('setDefaultText not used for this form element.');
     }
 
     public function getLabel(): string
@@ -90,7 +96,7 @@ class FormText implements IFormElements
     // @codingStandardsIgnoreEnd
 
     /*********************************************************************************************************
-     * metodi opzionali
+     * Opzional methods
      ********************************************************************************************************/
 
     /**
@@ -123,12 +129,11 @@ class FormText implements IFormElements
      */
     public function check(): bool
     {
-
         if ($this->value == '') {
-            $this->addLog('Testo vuoto');
+            $this->addLog("id {$this->id}: _VOC_", $this->voc->formEmptyText());
         }
 
-        return $this->getCheckEsito();
+        return $this->getCheckOutcome();
     }
 
     /**
@@ -142,10 +147,14 @@ class FormText implements IFormElements
 
         if (!$this->TErrorChecked) {
             $this->check();
+        } else {
+            /*Ok*/
         }
 
         if ($this->TErrorValid) {
             $html = "<span {$this->getGlobalAttributes()}>{$this->value}</span>";
+        } else {
+            /*Ok*/
         }
         return $html;
     }

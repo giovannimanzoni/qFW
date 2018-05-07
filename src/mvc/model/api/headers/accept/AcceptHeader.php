@@ -10,6 +10,9 @@ declare(strict_types=1);
 
 namespace qFW\mvc\model\api\headers\accept;
 
+use qFW\mvc\controller\lang\ILang;
+use qFW\mvc\controller\vocabulary\Voc;
+
 /**
  * Class AcceptHeader
  *
@@ -19,27 +22,32 @@ namespace qFW\mvc\model\api\headers\accept;
  */
 class AcceptHeader
 {
-    /** @var array  hold supported formats*/
+    /** @var array  Hold supported formats*/
     private $supportedFormats = array();
 
-    /** @var array  hold accepted formats*/
+    /** @var array  Hold accepted formats*/
     private $acceptedFormats = array();
 
-    /** @var mixed|string  hold default format. show always a response in one format*/
+    /** @var mixed|string  Hold default format. show always a response in one format*/
     private $defaultFormat = '';
 
-    /** @var string hold warning mex*/
+    /** @var string Hold warning mex*/
     private $warningMex = '';
+
+    /** @var \qFW\mvc\controller\vocabulary\Voc  */
+    private $voc;
 
     /**
      * AcceptHeader constructor.
      *
-     * @param array $supportedFormats
+     * @param array                          $supportedFormats
+     * @param \qFW\mvc\controller\lang\ILang $lang
      */
-    public function __construct(array $supportedFormats)
+    public function __construct(array $supportedFormats, ILang $lang)
     {
         $this->supportedFormats = $supportedFormats;
         $this->defaultFormat = $supportedFormats[0];
+        $this->voc= new Voc();
 
         $this->acceptedFormats = $this->parseAcceptHeader();
     }
@@ -70,7 +78,7 @@ class AcceptHeader
         }
 
         usort($accept, function ($a, $b) {
-            /* first tier: highest q factor wins */
+            /* First tier: highest q factor wins */
             $diff = $b->q - $a->q;
             if ($diff > 0) {
                 $diff = 1;
@@ -78,7 +86,7 @@ class AcceptHeader
                 if ($diff < 0) {
                     $diff = -1;
                 } else {
-                    /* tie-breaker: first listed item wins */
+                    /* Tie-breaker: first listed item wins */
                     $diff = $a->pos - $b->pos;
                 }
             }
@@ -109,11 +117,15 @@ class AcceptHeader
                 $sendFormat = $format;
                 $warning = false;
                 break;
+            } else {
+                /*Ok, continue*/
             }
         }
 
         if ($warning) {
             $this->setWaring();
+        } else {
+            /*OK*/
         }
 
         return $sendFormat;
@@ -124,12 +136,12 @@ class AcceptHeader
      */
     private function setWaring()
     {
-        $warningMex = 'Accept Header not in supported formats. You send | ';
+        $warningMex = $this->voc->headerAcceptNotSupported();
         foreach ($this->acceptedFormats as $accFormat) {
             $warningMex .= "$accFormat | ";
         }
 
-        $warningMex .= 'Accepted Headers are: | ';
+        $warningMex .= $this->voc->headerAcceptAre();
         foreach ($this->supportedFormats as $supFormat) {
             $warningMex .= "$supFormat | ";
         }

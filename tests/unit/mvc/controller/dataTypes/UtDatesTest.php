@@ -4,6 +4,9 @@ namespace qFW\tests\unit\mvc\controller\dataTypes;
 
 use PHPUnit\Framework\TestCase;
 use qFW\mvc\controller\dataTypes\UtDate;
+use qFW\mvc\controller\lang\LangEn;
+use qFW\mvc\controller\lang\LangIt;
+use qFW\mvc\controller\vocabulary\VocEN;
 
 /**
  * Class UtDatesTest
@@ -12,6 +15,9 @@ use qFW\mvc\controller\dataTypes\UtDate;
  */
 class UtDatesTest extends TestCase
 {
+
+    private static $utDate;
+
     /**
      * Setup class (Fixtures)
      */
@@ -19,6 +25,8 @@ class UtDatesTest extends TestCase
     {
         date_default_timezone_set('Europe/Rome');
         fwrite(STDOUT, __METHOD__ . "\n");
+
+        self::$utDate = new UtDate(new LangEn());
     }
 
 
@@ -27,21 +35,21 @@ class UtDatesTest extends TestCase
      */
     public function testDateTimeToDatel()
     {
-        $dateTime=array(
+        $dateTime = array(
             '2019-01-01 12:40:00', // data semplice
             '2019-12-30 10:00:59',  // data x testare formattazione gg/mm/aaaa e non mm/gg/aaaa
             '0000-00-00 00:00:00'   // data vuota
         );
 
-        $date=array(
+        $dateVer = array(
             '01/01/2019', // data semplice
             '30/12/2019',  // data x testare formattazione gg/mm/aaaa e non mm/gg/aaaa
             ''
         );
 
-        foreach($dateTime as $key => $data) {
-            $data = UtDate::dateTimeToDate($data);
-            $this->assertEquals($date[$key], $data);
+        foreach ($dateTime as $key => $data) {
+            $data = self::$utDate->dateTimeToDate($data);
+            $this->assertEquals($dateVer[$key], $data);
         }
     }
 
@@ -50,22 +58,21 @@ class UtDatesTest extends TestCase
      */
     public function testDateTimeToDateTime()
     {
-        $mySqlDateTimeRecord=array(
+        $mySqlDateTimeRecord = array(
             '2019-01-01 12:40:00', // data semplice
             '2019-12-30 10:00:59',  // data x testare formattazione gg/mm/aaaa e non mm/gg/aaaa
             '0000-00-00 00:00:00'   // data vuota
         );
 
-        $date=array(
+        $dateVer = array(
             '01/01/2019 12:40:00', // data semplice
             '30/12/2019 10:00:59',  // data x testare formattazione gg/mm/aaaa e non mm/gg/aaaa
             ''
         );
 
-
-        foreach($mySqlDateTimeRecord as $key => $data) {
-            $data = UtDate::dateTimeToDateTime($data);
-            $this->assertEquals($date[$key], $data);
+        foreach ($mySqlDateTimeRecord as $key => $data) {
+            $data = self::$utDate->dateTimeToDateTime($data);
+            $this->assertEquals($dateVer[$key], $data);
         }
     }
 
@@ -74,25 +81,25 @@ class UtDatesTest extends TestCase
      */
     public function testDateTimeToDateTimeVerbose()
     {
-        $today=date('Y-m-d');
-        $yesterday=date('Y-m-d',strtotime('yesterday'));
+        $today = date('Y-m-d');
+        $yesterday = date('Y-m-d', strtotime('yesterday'));
 
-        $mySqlDateTimeRecord=array(
+        $mySqlDateTimeRecord = array(
             "$today 12:40:00", // data semplice
             "$yesterday 12:40:00",  // data x testare formattazione gg/mm/aaaa e non mm/gg/aaaa
             '0000-00-00 00:00:00'   // data vuota
 
         );
 
-        $date=array(
-            'Oggi alle 12:40:00', // data semplice
-            'Ieri alle 12:40:00',  // data x testare formattazione gg/mm/aaaa e non mm/gg/aaaa
+        $dateVer = array(
+            'today at 12:40:00', // data semplice
+            'yesterday at 12:40:00',  // data x testare formattazione gg/mm/aaaa e non mm/gg/aaaa
             ''
         );
 
-        foreach($mySqlDateTimeRecord as $key => $data) {
-            $data = UtDate::dateTimeToDateTime($data,true);
-            $this->assertEquals($date[$key], $data);
+        foreach ($mySqlDateTimeRecord as $key => $data) {
+            $data = self::$utDate->dateTimeToDateTime($data, true);
+            $this->assertEquals($dateVer[$key], $data);
         }
     }
 
@@ -101,27 +108,25 @@ class UtDatesTest extends TestCase
      */
     public function testCheckDateRange()
     {
-
-        $this->assertTrue(UtDate::CheckDateRange('01/02/2007','01/09/2018'));
-        $this->assertFalse(UtDate::CheckDateRange('01/09/2018','01/02/2007'));
+        $this->assertTrue(self::$utDate->CheckDateRange('01/02/2007', '01/09/2018'));
+        $this->assertFalse(self::$utDate->CheckDateRange('01/09/2018', '01/02/2007'));
 
     }
 
     /**
      * Test get date in mysql format for current date or given date
      */
-    public function  testGetDateMax()
+    public function testGetDateMax()
     {
-        $exp1=date_create(date('Y-m-d H:i:s'));
-        $this->assertEquals($exp1,UtDate::getDateMax(null));
+        $exp1 = date_create(date('Y-m-d H:i:s'));
+        $this->assertEquals($exp1, self::$utDate->getDateMax(null));
 
-        $dateTime=UtDate::getDateMax('01/01/2000');
-        $this->assertEquals('2000-01-01 00:00:00',$dateTime->format('Y-m-d H:i:s'));
+        $dateTime = self::$utDate->getDateMax('01/01/2000');
+        $this->assertEquals('2000-01-01 00:00:00', $dateTime->format('Y-m-d H:i:s'));
 
         // test date in format gg/mm/aaaa
-        $dateTime=UtDate::getDateMax('30/01/2000');
-        $this->assertEquals('2000-01-30 00:00:00',$dateTime->format('Y-m-d H:i:s'));
-
+        $dateTime = self::$utDate->getDateMax('30/01/2000');
+        $this->assertEquals('2000-01-30 00:00:00', $dateTime->format('Y-m-d H:i:s'));
     }
 
     /**
@@ -131,19 +136,18 @@ class UtDatesTest extends TestCase
     {
         $reference = new \DateTimeImmutable();
 
-        $this->assertEquals(UtDate::DateIntervalToSeconds(
+        $this->assertEquals(self::$utDate->DateIntervalToSeconds(
             $reference,
-            $reference),0);
+            $reference), 0);
 
 
         $endTime = $reference->add(new \DateInterval("PT10M")); // add 10 Minutes
 
         $this->assertEquals(
-            UtDate::DateIntervalToSeconds(
+            self::$utDate->DateIntervalToSeconds(
                 $endTime,
                 $reference
-            ),600);
-
+            ), 600);
     }
 
     /**
@@ -151,23 +155,22 @@ class UtDatesTest extends TestCase
      */
     public function testSecondsBetweenDates()
     {
-        $arrDateInit=array(
+        $arrDateInit = array(
             '01/01/2000 00:00:00',  // simple date
             '30/01/2000 00:00:00',  // date for test european format
             '30/01/2000'            // without seconds in first date
         );
 
-        $arrDateEnd=array(
+        $arrDateEnd = array(
             '01/01/2000 00:00:10',
             '30/01/2000 00:00:10',
             '30/01/2000 00:00:10'
         );
 
-
-        foreach($arrDateInit as $key=> $data) {
-            $this->assertEquals('10', UtDate::secondsBetweenDates($arrDateInit[$key], $arrDateEnd[$key]));
+        $date = new UtDate(new LangEn());
+        foreach ($arrDateInit as $key => $data) {
+            $this->assertEquals('10', $date->secondsBetweenDates($arrDateInit[$key], $arrDateEnd[$key]));
         }
-
     }
 
     /**
@@ -175,7 +178,7 @@ class UtDatesTest extends TestCase
      */
     public function testTimeLaps()
     {
-        $arrDateInit=array(
+        $arrDateInit = array(
             '01/01/2000 00:00:00',  // simple date
             '30/01/2000 00:00:00',  // date for test european format
             '30/01/2000',           // without seconds in first date
@@ -185,7 +188,7 @@ class UtDatesTest extends TestCase
 
         );
 
-        $arrDateEnd=array(
+        $arrDateEnd = array(
             '01/01/2000 00:00:10',
             '30/01/2000 00:00:10',
             '30/01/2000 00:00:10',
@@ -194,17 +197,18 @@ class UtDatesTest extends TestCase
             '31/01/2000'
         );
 
-        $arrResults=array(
+        $arrResults = array(
             '+ 00:00:10',
             '+ 00:00:10',
             '+ 00:00:10',
             '<span class="timeLapsTrigger">+ 05:30:25</span>',
-            '<span class="timeLapsTrigger">+ 3 giorni e 00:00:00</span>',
-            '<span class="timeLapsTrigger">+ 1 giorno e 00:00:00</span>'
+            '<span class="timeLapsTrigger">+ 3 days and 00:00:00</span>',
+            '<span class="timeLapsTrigger">+ 1 day and 00:00:00</span>'
         );
 
-        foreach($arrDateInit as $key=> $data) {
-            $this->assertEquals($arrResults[$key], UtDate::timeLaps($arrDateInit[$key], $arrDateEnd[$key],90));
+        $date = new UtDate(new LangEn());
+        foreach ($arrDateInit as $key => $data) {
+            $this->assertEquals($arrResults[$key], $date->timeLaps($arrDateInit[$key], $arrDateEnd[$key], 90));
         }
     }
 
@@ -213,7 +217,7 @@ class UtDatesTest extends TestCase
      */
     public function testDateToTimestamp()
     {
-        $arrDateInit=array(
+        $arrDateInit = array(
             '01/01/2000',           // simple date
             '30/01/2000 00:00:00',  // date for test european format
             '30/01/2000 12:05:42'   // ignore seconds in date
@@ -221,14 +225,14 @@ class UtDatesTest extends TestCase
         );
 
 
-        $arrResults=array(
+        $arrResults = array(
             '2000-01-01 00:00:00',
             '2000-01-30 00:00:00',
             '2000-01-30 00:00:00'
         );
 
-        foreach($arrDateInit as $key=> $data) {
-            $this->assertEquals($arrResults[$key], UtDate::dateToTimestamp($arrDateInit[$key]));
+        foreach ($arrDateInit as $key => $data) {
+            $this->assertEquals($arrResults[$key], self::$utDate->dateToTimestamp($arrDateInit[$key]));
         }
     }
 
@@ -240,21 +244,19 @@ class UtDatesTest extends TestCase
     public function testDatetimeToTimestamp()
     {
 
-        $arrDateInit=array(
+        $arrDateInit = array(
             '01/01/2000 00:00:00',  // simple date
             '30/01/2000 12:05:42'   // test for date in european format
 
         );
 
-        $arrResults=array(
+        $arrResults = array(
             '946681200',
             '949230342'
         );
 
-        foreach($arrDateInit as $key=> $data) {
-            $this->assertEquals($arrResults[$key], UtDate::datetimeToTimestamp($arrDateInit[$key]));
+        foreach ($arrDateInit as $key => $data) {
+            $this->assertEquals($arrResults[$key], self::$utDate->datetimeToTimestamp($arrDateInit[$key]));
         }
     }
-
-
 }

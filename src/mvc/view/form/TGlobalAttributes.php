@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace qFW\mvc\view\form;
 
+use qFW\mvc\controller\lang\ILang;
+
 /**
  * Trait TGlobalAttributes
  *
@@ -28,47 +30,71 @@ trait TGlobalAttributes
     private $contenteditable = false;
     private $contextmenuId = '';
     private $contextmenuHtml = '';
-    private $dataGAName = '';     // data global attribute name
-    private $dataGAValue = '';    // data global attribute value
-    // private dir='';          // ltr, non abbiamo necessità di impostare la pagina ltr e il campo rtl...
+    private $dataGAName = '';     // Data global attribute name
+    private $dataGAValue = '';    // Data global attribute value
+    // private dir='';          // Ltr, non abbiamo necessità di impostare la pagina ltr e il campo rtl...
     private $draggable = false;
-    //private $dropzone='';    // ancora non supportato
+    //private $dropzone='';    // Still not supported
     private $hidden = false;
-    private $lang = '';
+    private $langGA = '';
     private $spellcheck = false;
     private $style = '';
     private $tabindex = 0;
     private $title = '';
-    // private $translate='';   // supportato da nessun browser
+    // private $translate='';   // No browser supporteds
 
     /***********************************
-     * set
+     * Settter
      **********************************/
 
+    /**
+     * @param string $accKey
+     *
+     * @return $this
+     */
     public function setAccessKey(string $accKey)
     {
         $this->accesskey = $accKey;
         return $this;
     }
 
+    /**
+     * @param string $class
+     *
+     * @return $this
+     */
     public function setClass(string $class)
     {
         $this->class = $class;
         return $this;
     }
 
+    /**
+     * @param string $style
+     *
+     * @return $this
+     */
     public function setStyle(string $style)
     {
         $this->style = $style;
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function setContentEditable()
     {
         $this->contenteditable = true;
         return $this;
     }
 
+    /**
+     * @param string $id
+     * @param string $html
+     *
+     * @return $this
+     */
     public function setContextMenu(string $id, string $html)
     {
         $this->contextmenuId = $id;
@@ -76,6 +102,12 @@ trait TGlobalAttributes
         return $this;
     }
 
+    /**
+     * @param string $name
+     * @param string $value
+     *
+     * @return $this
+     */
     public function setDataGA(string $name, string $value)
     {
         $this->dataGAName = $name;
@@ -83,46 +115,70 @@ trait TGlobalAttributes
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function setDraggable()
     {
         $this->draggable = true;
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function setHidden()
     {
         $this->hidden = true;
         return $this;
     }
 
-    public function setLang(string $lang)
+    /**
+     * @param \qFW\mvc\controller\lang\ILang $langGA
+     *
+     * @return $this
+     */
+    public function setLangGA(ILang $langGA)
     {
-        $this->lang = $lang;
+        $this->langGA = $langGA;
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function setSpellCheck()
     {
         $this->spellcheck = true;
         return $this;
     }
 
+    /**
+     * @param int $index
+     *
+     * @return $this
+     */
     public function setTabIndex(int $index)
     {
-        // necessario controllare qui questo errore perchè di default il valore è 0
+        // Need to check this error here because by default the value is 0
         if ($index == 0) {
-            $this->addLog("id='{$this->id}': Valore di tabindex non può essere 0");
+            $this->addLog("id='{$this->id}': _VOC_", $this->voc->formTabindexNot0());
         } else {
             $this->tabindex = $index;
         }
         return $this;
     }
 
+    /**
+     * @param string $title
+     *
+     * @return $this
+     */
     public function setTitle(string $title)
     {
-        // necessario controllare qui questo errore perchè di default il valore è 0
+        // Need to check this error here because by default the value is 0
         if ($title == '') {
-            $this->addLog("id='{$this->id}': Valore di title non può essere vuoto");
+            $this->addLog("id='{$this->id}': _VOC_", $this->voc->formTabindexNoEmpty());
         } else {
             $this->title = $title;
         }
@@ -130,64 +186,100 @@ trait TGlobalAttributes
     }
 
     /***********************************
-     * get
+     * Getter
      **********************************/
 
+    /**
+     * @return string
+     */
     public function getAccessKey(): string
     {
         return $this->accesskey;
     }
 
+    /**
+     * @return string
+     */
     public function getId(): string
     {
         return $this->id;
     }
 
+    /**
+     * @return string
+     */
     public function getContextMenuId(): string
     {
         return $this->contextmenuId;
     }
 
+    /**
+     * @return string
+     */
     public function getContextMenuHtml(): string
     {
         return $this->contextmenuHtml;
     }
 
+    /**
+     * @return string
+     */
     public function getDataGAName(): string
     {
         return $this->dataGAName;
     }
 
+    /**
+     * @return string
+     */
     public function getDataGAValue(): string
     {
         return $this->dataGAValue;
     }
 
-    public function getLang(): string
+    /**
+     * @return string
+     */
+    public function getLangGA(): string
     {
-        return $this->lang;
+        return $this->langGA;
     }
 
+    /**
+     * @return bool
+     */
     public function getSpellCheck(): bool
     {
         return $this->spellcheck;
     }
 
+    /**
+     * @return bool
+     */
     public function getContentEditable(): bool
     {
         return $this->contenteditable;
     }
 
+    /**
+     * @return int
+     */
     public function getTabIndex(): int
     {
         return $this->tabindex;
     }
 
+    /**
+     * @return bool
+     */
     public function getHidden(): bool
     {
         return $this->hidden;
     }
 
+    /**
+     * @return string
+     */
     public function getGlobalAttributes()
     {
         $html = '';

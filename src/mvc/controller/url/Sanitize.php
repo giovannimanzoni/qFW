@@ -19,6 +19,16 @@ namespace qFW\mvc\controller\url;
  */
 class Sanitize
 {
+    /** @var bool true if cleanPostData() finds an error */
+    private $cleanErr = false;
+
+    /**
+     * Sanitize constructor.
+     */
+    public function __construct()
+    {
+    }
+
     /**
      * Clean post vars
      *
@@ -26,7 +36,7 @@ class Sanitize
      *
      * @return string
      */
-    public static function cleanPostData(string $data): string
+    public function cleanPostData(string $data): string
     {
         $ret = '';
 
@@ -35,36 +45,54 @@ class Sanitize
         $lenOut = strlen($strClean);
         if ($lenInput == $lenOut) {
             $ret = trim($strClean);
-        } else {/* valori post manomessi*/
+        } else {
+            // Post-tampered values
+            $this->cleanErr = true;
         }
         //todo: else errore !!
         return $ret;
     }
 
     /**
-     * Controlla se la risorsa in rete esiste
-     * -> https://stackoverflow.com/questions/2280394/how-can-i-check-if-a-url-exists-via-php
-     *
-     * @param string $url es.: http://www.domain.com/somefile.jpg
+     * return cleanPostData error state
      *
      * @return bool
      */
-    public static function isValidUrl(string $url): bool
+    public function getCleanErr(): bool
     {
-        // first do some quick sanity checks:
+        return $this->cleanErr;
+    }
+
+
+    /**
+     * Check if the resource on the network exists
+     * -> https://stackoverflow.com/questions/2280394/how-can-i-check-if-a-url-exists-via-php
+     *
+     * @param string $url
+     * @param bool   $testCurl
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    public function isValidUrl(string $url, bool $testCurl = true): bool
+    {
+        $ret = true;
+        // First do some quick sanity checks:
         if (!$url || !is_string($url)) {
-            return false;
+            $ret = false;
+        } // Quick check url is roughly a valid http request: ( http://blah/... )
+        elseif (!preg_match('/^http(s)?:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*(:[0-9]+)?(\/.*)?$/i', $url)) {
+            $ret = false;
+        } // The next bit could be slow:
+        elseif ($testCurl) {
+            if ($this->getHttpResponseCodeUsingCurl($url) != 200) {
+                $ret = false;
+            }
+        } else {
+            /*Ok*/
         }
-        // quick check url is roughly a valid http request: ( http://blah/... )
-        if (!preg_match('/^http(s)?:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*(:[0-9]+)?(\/.*)?$/i', $url)) {
-            return false;
-        }
-        // the next bit could be slow:
-        if (self::getHttpResponseCodeUsingCurl($url) != 200) {
-            return false;
-        }
-        // all good!
-        return true;
+        // All good!
+        return $ret;
     }
 
     /**
@@ -74,9 +102,8 @@ class Sanitize
      *
      * @return string
      */
-    private static function cleanHtml(string $dirtyHtml): string
+    private function cleanHtml(string $dirtyHtml): string
     {
-
         //@todo configurarlo con tidy ?
         $config = \HTMLPurifier_Config::createDefault();
         $config->set('HTML.Allowed', ''); // Allow Nothing
@@ -155,7 +182,7 @@ class Sanitize
             // @codingStandardsIgnoreEnd
         } while ($old_data !== $data);
 
-        // we are done...
+        // We are done...
         return $data;
     }
 
@@ -164,27 +191,32 @@ class Sanitize
      * @param bool $followredirects
      *
      * @return bool|mixed
+     * @throws \Exception
      */
-    private static function getHttpResponseCodeUsingCurl($url, $followredirects = true)
+    private function getHttpResponseCodeUsingCurl($url, $followredirects = true)
     {
-        // returns int responsecode, or false (if url does not exist or connection timeout occurs)
+        // Returns int responsecode, or false (if url does not exist or connection timeout occurs)
         // NOTE: could potentially take up to 0-30 seconds , blocking further code execution
         // (more or less depending on connection, target site, and local timeout settings))
         // if $followredirects == false: return the FIRST known httpcode (ignore redirects)
         // if $followredirects == true : return the LAST  known httpcode (when redirected)
         if (!$url || !is_string($url)) {
             return false;
+        } else {
+            /*Ok*/
         }
         $ch = @curl_init($url);
         if ($ch === false) {
-            return false;
+            throw new \Exception('curl init failed');
+        } else {
+            /*OK*/
         }
-        @curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
-        @curl_setopt($ch, CURLOPT_NOBODY, true);    // dont need body
-        @curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);    // catch output (do NOT print!)
+        @curl_setopt($ch, CURLOPT_HEADER, true);    // We want headers
+        @curl_setopt($ch, CURLOPT_NOBODY, true);    // Dont need body
+        @curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);    // Catch output (do NOT print!)
         if ($followredirects) {
             @curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            @curl_setopt( // fairly random number, but could prevent unwanted endless redirects with followlocation=true
+            @curl_setopt( // Fairly random number, but could prevent unwanted endless redirects with followlocation=true
                 $ch,
                 CURLOPT_MAXREDIRS,
                 10
@@ -192,12 +224,12 @@ class Sanitize
         } else {
             @curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
         }
-        @curl_setopt( // fairly random number (seconds)... but could prevent waiting forever to get a result
+        @curl_setopt( // Fairly random number (seconds)... but could prevent waiting forever to get a result
             $ch,
             CURLOPT_CONNECTTIMEOUT,
             10
         );
-        @curl_setopt( // fairly random number (seconds)... but could prevent waiting forever to get a result
+        @curl_setopt( // Fairly random number (seconds)... but could prevent waiting forever to get a result
             $ch,
             CURLOPT_TIMEOUT,
             10
@@ -206,13 +238,15 @@ class Sanitize
             $ch,
             CURLOPT_USERAGENT,
             'Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.89 Safari/537.1'
-        );   // pretend we're a regular browser
+        );   // Pretend we're a regular browser
         @curl_exec($ch);
         if (@curl_errno($ch)) {   // should be 0
             @curl_close($ch);
             return false;
+        } else {
+            /*Ok*/
         }
-        $code = @curl_getinfo( // note: php.net documentation shows this returns a string, but really it returns an int
+        $code = @curl_getinfo( // Note: php.net documentation shows this returns a string, but really it returns an int
             $ch,
             CURLINFO_HTTP_CODE
         );

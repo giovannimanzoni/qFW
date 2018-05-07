@@ -30,11 +30,11 @@ class HttpRequestBuilderProxy
      * HttpRequestBuilderProxy constructor.
      *
      * @param \qFW\mvc\model\httpRequest\engine\IEngineName $engine
-     * @param string                                           $url
+     * @param string                                        $url
      * @param \qFW\mvc\model\httpRequest\verbs\IVerbs       $verb
      * @param \qFW\log\ILogOutput                           $outputLog
-     * @param string                                           $contentType
-     * @param string                                           $acceptType
+     * @param string                                        $contentType
+     * @param string                                        $acceptType
      */
     public function __construct(
         IEngineName $engine,

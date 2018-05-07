@@ -21,7 +21,6 @@ use qFW\mvc\model\httpRequest\engine\IEngineObjBuilder;
  */
 class CurlObj implements IEngineObj, \SplObserver
 {
-
     /** @var resource curl resource */
     private $curl;
 
@@ -34,7 +33,7 @@ class CurlObj implements IEngineObj, \SplObserver
     /** @var bool  hold if curl check is valid */
     private $valid = false;
 
-    // per addError(), cosi si può tenere traccia, se si esegue piu volte check() quale volta è stato generato l'errore.
+    // For addError(), so you can keep track, if you run check () several times when the error was generated.
     /** @var int  index for addError */
     private $checkTime = 1;
 
@@ -82,16 +81,14 @@ class CurlObj implements IEngineObj, \SplObserver
     {
         $this->headersGet = array();
 
-        // init curl obj
-        // fixme -> da chiamare solo la prima volta nella pagina principale che usa curl ?
-        //session_write_close(); // https://stackoverflow.com/questions/2424714/how-to-maintain-session-in-curl-in-php
+        //session_write_close(); ? // https://stackoverflow.com/questions/2424714/how-to-maintain-session-in-curl-in-php
+
         $this->curl = curl_init();
 
         $this->objBuilder = $objBuilder;
         $this->initVars();
         $this->logHistory[$this->checkTime] = array();
     }
-
 
     /**
      * Get curl result or error response
@@ -100,24 +97,26 @@ class CurlObj implements IEngineObj, \SplObserver
      */
     public function getResult(): string
     {
-        // può servire chiamare mostrare piu volte la pagina. Se le opzioni di curl non sono cambiate,
-        //  non ha senso ripetere ogni volta il check
+        // It can serve to show the page several times. If the curl options have not changed, it makes no sense to
+        //      repeat the check every time
         if (!$this->checked) {
             $this->check();
+        } else {
+            /*Ok*/
         }
 
         if ($this->valid) {
             $this->curl($this->objBuilder);
             $html = $this->html;
         } else {
-            $html = 'Errori nel builder.';
+            $html = 'curl builder errors.';
         }
 
         return $html;
     }
 
     /**
-     *  var dump of curl_getinfo()
+     *  Var dump of curl_getinfo()
      */
     public function getRequestInfo()
     {
@@ -141,14 +140,14 @@ class CurlObj implements IEngineObj, \SplObserver
     {
         $this->valid = false;
 
-        // se ci sono errori
+        // If there are errors
         if ($this->objBuilder->getLogsQty()) {
             $this->logHistory[$this->checkTime][] = $this->objBuilder->getLogs();
         } else {
             $this->valid = true;
         }
 
-        $this->checkTime++; //raggruppa gli eventuali messaggi di errore che potrebbero essere generati
+        $this->checkTime++; // Groups any error messages that could be generated
         $this->checked = true;
     }
 
@@ -164,7 +163,7 @@ class CurlObj implements IEngineObj, \SplObserver
             curl_setopt($this->curl, $option, $value);
         }
 
-        //@todo farla parametrica dal builder ?
+        //@todo make it parametric from the builder ?
 
         // https://stackoverflow.com/questions/9183178/can-php-curl-retrieve-response-headers-and-body-in-a-single-request/17971689
         $ch = $this->curl;
@@ -178,6 +177,8 @@ class CurlObj implements IEngineObj, \SplObserver
                 if (count($header) < 2) {
                     // ignore invalid headers
                     return $len;
+                } else {
+                    /*Ok*/
                 }
 
                 $name = strtolower(trim($header[0]));
@@ -192,11 +193,11 @@ class CurlObj implements IEngineObj, \SplObserver
         );
 
 
-        $htmlCurl = curl_exec($this->curl); // eseguo la chiamata
+        $htmlCurl = curl_exec($this->curl);
         $this->extractHeadersSent();
 
         if (curl_error($this->curl)) {
-            $this->html = '<p>Errori della chiamata curl: <br>' . curl_error($this->curl) . '</p>';
+            $this->html = '<p>Errors from curl call: <br>' . curl_error($this->curl) . '</p>';
         } elseif (is_string($htmlCurl)) {
             $this->html = trim($htmlCurl);
         } else {
@@ -208,7 +209,7 @@ class CurlObj implements IEngineObj, \SplObserver
 
     /**
      *
-     * must be public
+     * Must be public
      *
      * @param $ch
      * @param $headerLine
@@ -217,30 +218,14 @@ class CurlObj implements IEngineObj, \SplObserver
      */
     public function curlResponseHeaderCallback($ch, $headerLine)
     {
-
         if (preg_match('/^Set-Cookie:\s*([^;]*)/mi', $headerLine, $cookie) == 1) {
             $this->cookies[] = $cookie;
+        } else {
+            /*Ok*/
         }
 
         return strlen($headerLine); // Needed by curl
     }
-
-    /**
-     * NON USATA, FA DANNO ?
-     *
-     * @param string $html
-     */
-    /*public function extractCookies(string $html)
-    {
-        preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $html, $matches);
-        $cookies = array();
-        foreach($matches[1] as $item) {
-            parse_str($item, $cookie);
-            $cookies = array_merge($cookies, $cookie);
-        }
-
-        $this->cookies=$cookies;
-    }*/
 
     /**
      *
@@ -297,19 +282,23 @@ class CurlObj implements IEngineObj, \SplObserver
     public function closeCurl()
     {
 
-        curl_close($this->curl); // chiudo curl, cosi viene scritto il cookie -> https://stackoverflow
+        curl_close($this->curl); // I close curl, so the cookie is written -> https://stackoverflow
         //.com/questions/11390613/curl-post-method-not-creating-cookie - // Notice: Undefined property ??
         unset($this->curl);
-        //usleep(100000); // 100000 = 100ms - per evitare DoS attack
+        //usleep(100000); // 100000 = 100ms - to avoid DoS attack
         usleep(1000000); // 1 sec
 
-        // curl salva la sessione con  session_write_close(); .
-        //      la riapro per far ripristinarla
+        // Curl save the session with session_write_close(); .
+        //      I reopen it to restore it
         if (ob_get_level() == 0) {
             ob_start();
+        } else {
+            /*Ok*/
         }
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
+        } else {
+            /*Ok*/
         }
     }
 }

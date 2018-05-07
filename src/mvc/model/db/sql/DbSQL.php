@@ -16,7 +16,7 @@ namespace qFW\mvc\model\db\sql;
  */
 abstract class DbSQL
 {
-    /** @var \PDO hold connection */
+    /** @var \PDO Hold connection */
     private static $pdo;
 
     /**
@@ -28,9 +28,11 @@ abstract class DbSQL
     }
 
     /**
-     * load and connect to db
+     * Load config and connect to db
      *
      * @param string $file
+     *
+     * @throws \Exception
      */
     protected static function loadAndConnect(string $file)
     {
@@ -52,6 +54,8 @@ abstract class DbSQL
     {
         if (self::$pdo) {
             self::$pdo->close();
+        } else {
+            /*Ok*/
         }
         return true;
     }
@@ -75,15 +79,18 @@ abstract class DbSQL
     /**
      * Connect to the db
      *
-     * @param $dbMysqlHost
-     * @param $port
-     * @param $dbName
-     * @param $dbUser
-     * @param $dbPwd
+     * @param        $dbMysqlHost
+     * @param        $port
+     * @param        $dbName
+     * @param        $dbUser
+     * @param        $dbPwd
+     * @param string $charset
+     *
+     * @throws \Exception
      */
-    private static function connect($dbMysqlHost, $port, $dbName, $dbUser, $dbPwd)
+    private static function connect($dbMysqlHost, $port, $dbName, $dbUser, $dbPwd, $charset = 'utf8')
     {
-        $dsn = "mysql:host=$dbMysqlHost;port=$port;dbname=$dbName;charset=utf8";
+        $dsn = "mysql:host=$dbMysqlHost;port=$port;dbname=$dbName;charset=$charset";
 
         try {
             $opt = [
@@ -94,11 +101,9 @@ abstract class DbSQL
             self::$pdo = new \PDO($dsn, $dbUser, $dbPwd, $opt);
         } catch (\PDOException $e) {
             if ($e->getCode() == 1045) {
-                //@fixme
-                die('Accesso non autorizzato. Controlla le credenziali nel file credenziali.php');
+                throw new \Exception('Unauthorized access. Check the credentials');
             } else {
-                //@fixme
-                die($e->getMessage());
+                throw new \Exception($e->getMessage());
             }
         }
     }

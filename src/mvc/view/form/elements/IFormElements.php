@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace qFW\mvc\view\form\elements;
 
+use qFW\log\ILogOutput;
 use qFW\mvc\view\form\IFormElementsFinalize;
 
 /**
@@ -21,12 +22,10 @@ use qFW\mvc\view\form\IFormElementsFinalize;
  */
 interface IFormElements extends IFormElementsFinalize
 {
-
-    // public attribute on const start from 7.1.0
-    /** number of bootstrap column */
+    /** @var int Number of bootstrap column*/
     const BOOTSTRAP_COLUMNS = 12;
 
-    // usate per definire l'oggetto del form
+    // Used to define the object of the form
 
     /**
      * Set default value
@@ -81,7 +80,7 @@ interface IFormElements extends IFormElementsFinalize
     public function setElementRowClass(string $class);
 
 
-    //usate per creare il form
+    // Used to create the form
 
     /**
      * Get html id
@@ -131,4 +130,13 @@ interface IFormElements extends IFormElementsFinalize
      * @return string
      */
     public function getElementType(): string;
+
+    /**
+     * You can find this in TError trait
+     *
+     * @param \qFW\log\ILogOutput $outputLog
+     *
+     * @return mixed
+     */
+    public function createLogger(ILogOutput $outputLog);
 }

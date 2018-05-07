@@ -37,9 +37,10 @@ class HtmlView
      */
     public function render(array $data = array()): bool
     {
-
         if ($this->status) {
             http_response_code($this->status);
+        } else {
+            /*Ok*/
         }
         header('Content-Type: text/html');
 
@@ -61,8 +62,8 @@ class HtmlView
     /**
      * Show an array in an html list with title
      *
-     * @param string $title title
-     * @param array  $data  array to show in an html list
+     * @param string $title Title
+     * @param array  $data  Array to show in an html list
      *
      * @return string
      */
@@ -82,7 +83,7 @@ class HtmlView
     /**
      * Set status code
      *
-     * @param int $status   status code
+     * @param int $status   Status code
      *
      * @return $this
      */

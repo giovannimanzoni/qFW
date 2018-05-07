@@ -17,25 +17,30 @@ namespace qFW\log;
  */
 class LogMessage implements ILogMessage
 {
-    /** @var string type of log, user defined */
+    /** @var string Type of log, user defined */
     private $type = '';
 
-    /** @var string text to log */
+    /** @var string Text to log */
     private $text = '';
 
-    /** @var string hold date and time for the log*/
+    /** @var string Voc function */
+    private $vocFun = '';
+
+    /** @var string Hold date and time for the log */
     private $date = '';
 
     /**
      * LogMessage constructor.
      *
-     * @param string $type type of log, user defined
-     * @param string $text text to log
+     * @param string $type
+     * @param string $text
+     * @param string $vocFun
      */
-    public function __construct(string $type, string $text)
+    public function __construct(string $type, string $text, string $vocFun = '')
     {
         $this->type = $type;
         $this->text = $text;
+        $this->vocFun = $vocFun;
         $this->date = gmdate('Y-m-d H:i:s');
     }
 
@@ -57,6 +62,14 @@ class LogMessage implements ILogMessage
     public function getText(): string
     {
         return $this->text;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVocFun(): string
+    {
+        return $this->vocFun;
     }
 
     /**

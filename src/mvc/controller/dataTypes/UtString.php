@@ -11,6 +11,8 @@
 namespace qFW\mvc\controller\dataTypes;
 
 use qFW\mvc\controller\form\FieldLenght;
+use qFW\mvc\controller\lang\ILang;
+use qFW\mvc\controller\vocabulary\Voc;
 
 /**
  * Class UtString
@@ -19,6 +21,32 @@ use qFW\mvc\controller\form\FieldLenght;
  */
 class UtString
 {
+    private const YES = 1;
+
+    private const NO = 2;
+
+    /** @var \qFW\mvc\controller\lang\ILang */
+    private $lang;
+
+    /** @var \qFW\mvc\controller\dataTypes\UtNumbers */
+    private $utNum;
+
+    /** @var \qFW\mvc\controller\vocabulary\Voc */
+    private $voc;
+
+    /**
+     * UtString constructor.
+     *
+     * @param \qFW\mvc\controller\lang\ILang $lang
+     */
+    public function __construct(ILang $lang)
+    {
+        $this->lang = $lang;
+        $this->utNum = new UtNumbers();
+
+        $vocLang = 'qFW\mvc\controller\vocabulary\Voc' . $this->lang->getLang();
+        $this->voc = new $vocLang();
+    }
 
     /**
      * Check if two variable are equal
@@ -28,7 +56,7 @@ class UtString
      *
      * @return bool
      */
-    public static function areEqual($var1, $var2): bool
+    public function areEqual($var1, $var2): bool
     {
         if (($var1 <=> $var2) == 0) {
             $flag = true;
@@ -42,12 +70,12 @@ class UtString
     /**
      * Check if one string is found into an other one.
      *
-     * @param string $fullString   : full string
-     * @param string $stringToFind : string to find
+     * @param string $fullString   Full string
+     * @param string $stringToFind String to find
      *
-     * @return bool                : true or false if string is found
+     * @return bool                True or false if string is found
      */
-    public static function strSearch(string $fullString, string $stringToFind): bool
+    public function strSearch(string $fullString, string $stringToFind): bool
     {
         if (strpos($fullString, $stringToFind) !== false) {
             $found = true;
@@ -59,23 +87,25 @@ class UtString
     }
 
     /**
-     * Convert variable in string
+     * Convert variable to string
      *
      * @param $mixed
      *
      * @return string
      * @throws \Exception
      */
-    public static function getCleanString($mixed): string
+    public function getCleanString($mixed): string
     {
-
         $cleanString = $mixed;
 
         if (!is_string($mixed)) {
             if (is_bool($mixed)) {
                 throw new \Exception('Can not clean boolean as string.');
+            } else {
+                $cleanString = (strval($mixed));
             }
-            $cleanString = (strval($mixed));
+        } else {
+            /*Ok, is string*/
         }
         return $cleanString;
     }
@@ -88,22 +118,22 @@ class UtString
      * @return string
      * @throws \Exception
      */
-    public static function formatPrice($value): string
+    public function formatPrice($value): string
     {
-        return number_format(UtNumbers::getCleanFloat($value), 2, ',', '');
+        return number_format($this->utNum->getCleanFloat($value), 2, ',', '');
     }
 
     /**
-     * Wrapper per substr_count(), in caso in cui il nome non sia mnemonico..
+     * Wrapper for substr_count(), for more mnemonic name..
      *
-     * @param string $frase
-     * @param string $cerca
+     * @param string $text
+     * @param string $search
      *
      * @return int
      */
-    public static function strCount(string $frase, string $cerca): int
+    public function strCount(string $text, string $search): int
     {
-        return substr_count($frase, $cerca);
+        return substr_count($text, $search);
     }
 
     /**
@@ -112,9 +142,8 @@ class UtString
      *
      * @return string
      */
-    public static function limitString(string $text, int $truncate): string
+    public function limitString(string $text, int $truncate): string
     {
-
         return substr($text, 0, $truncate - 3) . '...';
     }
 
@@ -125,7 +154,7 @@ class UtString
      *
      * @return string
      */
-    public static function floatToString($mixed): string
+    public function floatToString($mixed): string
     {
         if (is_string($mixed)) {
             $ret = str_replace(',', '.', $mixed);
@@ -136,25 +165,24 @@ class UtString
         return $ret;
     }
 
-
     /**
-     * Return 'Sì' or 'No'.
-     * .This method is usefull for HTML select in forms
-     * I used 1 or 2 to avoid 0 as possible value when sanitize POST data and set to 0 if not present
+     * Return 'Yes' or 'No'.
+     * This method is usefull for HTML select in forms
+     * We used 1 and 2 to avoid 0 as possible value when sanitize POST data and set to 0 if not present
      *
      * @param int $id
      *
      * @return string
      */
-    public static function getSiNoString(int $id): string
+    public function getYesNoString(int $id): string
     {
         $str = '--';
-        if ($id == 1) {
-            $str = 'Sì';
+        if ($id == self::YES) {
+            $str = $this->voc->yesC();
+        } elseif ($id == self::NO) {
+            $str = $this->voc->noC();
         } else {
-            if ($id == 2) {
-                $str = 'No';
-            }
+            /*Ok, return default value*/
         }
         return $str;
     }
@@ -162,42 +190,42 @@ class UtString
     /**
      * Sum of numbers and get sum formatted as price
      *
-     * @param array ...$prezzi
+     * @param array ...$prices
      *
      * @return string
      * @throws \Exception
      */
-    public static function sommaPrezzi(...$prezzi): string
+    public function sumPrices(...$prices): string
     {
-
         $sum = 0;
-        foreach ($prezzi as $prezzo) {
-            $sum += $prezzo;
+        foreach ($prices as $price) {
+            $sum += $price;
         }
         return self::formatPrice($sum);
     }
 
-
     /**
-     * Validazione password
+     * Password validation
      *
      * @param string $pwd password
      *
-     * @return string   messaggio di errore
+     * @return string   error message
      */
-    public static function validatePwdMod1(string $pwd): string
+    public function validatePwdMod1(string $pwd): string
     {
         $err = '';
-        if (strlen($pwd) <= '8') {
-            $err = 'La password deve contenere almeno 8 caratteri.';
+        if (strlen($pwd) < '8') {
+            $err = $this->voc->pwdMust8Chrs();
         } elseif (strlen($pwd) > FieldLenght::DIM_PWD) {
-            $err = 'La password deve contenere meno di ' . FieldLenght::DIM_PWD . ' caratteri.';
+            $err = $this->voc->pwdMustMaxChrs();
         } elseif (!preg_match("#[0-9]+#", $pwd)) {
-            $err = 'La password deve contenere almeno un numero.';
+            $err = $this->voc->pwdMustOneNumber();
         } elseif (!preg_match("#[A-Z]+#", $pwd)) {
-            $err = 'La password deve contenere almeno una lettera maiuscola.';
+            $err = $this->voc->pwdMustUppercaseChrs();
         } elseif (!preg_match("#[a-z]+#", $pwd)) {
-            $err = 'La password deve contenere almeno una lettera minuscola.';
+            $err = $this->voc->pwdMustTinyChrs();
+        } else {
+            /*Ok, pwd is valid*/
         }
         return $err;
     }

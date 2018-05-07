@@ -25,9 +25,6 @@ abstract class Datatables
     /** @var string hold tabel id */
     private $tblId = '';
 
-    /** @var string delimiter */
-    protected $del = '';
-
     /** @var string table body */
     protected $body = '';
 
@@ -37,13 +34,11 @@ abstract class Datatables
      *
      * @param array  $tblColumnName
      * @param string $tblId
-     * @param string $del
      */
-    public function __construct(array $tblColumnName, string $tblId, string $del = "\n")
+    public function __construct(array $tblColumnName, string $tblId)
     {
         $this->tblColumnName = $tblColumnName;
         $this->tblId = $tblId;
-        $this->del = $del;
     }
 
     /**
@@ -65,6 +60,7 @@ abstract class Datatables
      *
      * @param string $ajax
      * @param int    $orderColumn
+     * @param string $ordermode
      * @param string $addCode
      *
      * @return string
@@ -81,16 +77,20 @@ abstract class Datatables
                         $("#' . $this->tblId . '").DataTable( {';
         if ($ajax != '') {
             $html .= '"ajax": \'' . $ajax . '\',';
+        } else {
+            /*Ok*/
         }
         if ($orderColumn > 0) {
             $html .= '"order": [[ ' . $orderColumn . ', "' . $ordermode . '" ]],';
+        } else {
+            /*Ok*/
         }
 
         $html .= $addCode . '
                             select: true
                         } );
                     } );
-                </script> ' . $this->del;
+                </script> ';
 
         return $html;
     }
@@ -111,26 +111,17 @@ abstract class Datatables
      */
     private function tableHead(): string
     {
-
-        $del = $this->del;
-
         $html = "				<table id='{$this->tblId}' class='table table-striped table-bordered' width='100%' 
-        cellspacing='0'> $del"
-            . "				  <thead> $del"
-            . "					  <tr> $del";
+        cellspacing='0'><thead><tr>";
 
-        //ciclo campi
         foreach ($this->tblColumnName as $name) {
-            $html .= "						  <th>$name</th> $del";
+            $html .= "<th>$name</th>";
         }
 
-        $html .= "					  </tr> $del"
-            . "				  </thead> $del"
-            . "				  <tbody> $del";
+        $html .= '</tr></thead><tbody>';
 
         return $html;
     }
-
 
     /**
      * Close the table
@@ -139,8 +130,6 @@ abstract class Datatables
      */
     private function closeTable(): string
     {
-
-        return "				 </tbody> {$this->del}"
-            . "			  </table> {$this->del}";
+        return '</tbody></table>';
     }
 }

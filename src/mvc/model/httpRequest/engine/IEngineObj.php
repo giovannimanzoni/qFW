@@ -27,7 +27,7 @@ interface IEngineObj
     public function __construct(IEngineObjBuilder $objBuilder);
 
     /**
-     * get results
+     * Get results
      *
      * @return string
      */

@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace qFW\mvc\view\formUt;
 
 use qFW\mvc\controller\dataTypes\UtString;
+use qFW\mvc\controller\lang\ILang;
 use qFW\mvc\view\form\elements\FormInput;
 use qFW\mvc\view\form\elements\FormTitle;
 use qFW\mvc\view\form\elements\input\InputHidden;
@@ -22,12 +23,28 @@ use qFW\mvc\view\form\FormObjBuilder;
 use qFW\mvc\view\form\FormPage;
 
 /**
- * Class FormUt
+ * Class FormDelete
  *
  * @package qFW\mvc\view\formUt
  */
-class FormElimina
+class FormDelete
 {
+    /** @var \qFW\mvc\controller\lang\ILang */
+    private $lang;
+
+    /** @var \qFW\mvc\controller\dataTypes\UtString */
+    private $utStr;
+
+    /**
+     * FormDelete constructor.
+     *
+     * @param \qFW\mvc\controller\lang\ILang $lang
+     */
+    public function __construct(ILang $lang)
+    {
+        $this->lang = $lang;
+        $this->utStr = new UtString($lang);
+    }
 
     /**
      * @param string $tbl
@@ -37,12 +54,11 @@ class FormElimina
      * @return string
      * @throws \Exception
      */
-    public static function formElimina(string $tbl, int $id, string $action = ''): string
+    public function formElimina(string $tbl, int $id, string $action = ''): string
     {
-
-        $logger = new HtmlName($_SESSION['uid']);
+        $logger = new HtmlName($_SESSION['uid'], $this->lang);
         // @codingStandardsIgnoreStart
-        $page = (new FormPage(' ', $logger))
+        $page = (new FormPage($logger))
             ->addElement((new FormTitle('Vuoi eliminare questo record dal database ?', 2))
             )
             ->addElement((new FormInput('risolvoPin', new InputPassword(), true))
@@ -54,10 +70,10 @@ class FormElimina
                              ->setValue('1')
             )
             ->addElement((new FormInput('idElimina', new InputHidden(), true))
-                             ->setValue(UtString::getCleanString($id))
+                             ->setValue($this->utStr->getCleanString($id))
             )
             ->addElement((new FormInput('tblElimina', new InputHidden(), true))
-                             ->setValue(UtString::getCleanString($tbl))
+                             ->setValue($this->utStr->getCleanString($tbl))
             )
             ->addElement((new FormInput('Elimina', new InputSubmit(), false))
                              ->setValue('Elimina')
@@ -68,7 +84,11 @@ class FormElimina
             ->addPage($page)
             ->build();
 
-        $form1 = new FormObj('frmEliminaById', $formRecipe, $action, $logger);
+        $form1 = new FormObj(
+            $formRecipe,
+            $action,
+            $logger
+        );
 
         return $form1->show();
     }

@@ -19,22 +19,20 @@ namespace qFW\mvc\view\api\json;
  */
 class JsonView
 {
-    /** @var int  hold http status code*/
+    /** @var int  Hold http status code*/
     private $status=0;
 
-    /** @var array  hold warnings*/
+    /** @var array Hold warnings*/
     private $warnings = array();
 
-    /** @var array hold errors */
+    /** @var array Hold errors */
     private $errors = array();
 
-
     /**
-     * Make json output
-     *
      * @param array $data
      *
      * @return bool
+     * @throws \Exception
      */
     public function render(array $data = array()): bool
     {
@@ -44,6 +42,8 @@ class JsonView
 
         if ($this->status) {
             http_response_code($this->status);
+        } else {
+            /*Ok*/
         }
 
         header('Content-Type: application/json');
@@ -100,15 +100,15 @@ class JsonView
         return $this;
     }
 
-
     /**
      * Safe json encode
      *
      * https://stackoverflow.com/questions/10199017/how-to-solve-json-error-utf8-error-in-php-json-decode
      *
-     * @param $value value to encode
+     * @param $value
      *
      * @return string
+     * @throws \Exception
      */
     private function safeJsonEncode($value)
     {
@@ -121,18 +121,18 @@ class JsonView
             case JSON_ERROR_NONE:
                 return $encoded;
             case JSON_ERROR_DEPTH:
-                return 'Maximum stack depth exceeded'; // or trigger_error() or throw new Exception()
+                throw new \Exception('Json Maximum stack depth exceeded');
             case JSON_ERROR_STATE_MISMATCH:
-                return 'Underflow or the modes mismatch'; // or trigger_error() or throw new Exception()
+                throw new \Exception('Json Underflow or the modes mismatch');
             case JSON_ERROR_CTRL_CHAR:
-                return 'Unexpected control character found';
+                throw new \Exception('Json Unexpected control character found');
             case JSON_ERROR_SYNTAX:
-                return 'Syntax error, malformed JSON'; // or trigger_error() or throw new Exception()
+                throw new \Exception('Json Syntax error, malformed JSON');
             case JSON_ERROR_UTF8:
                 $clean = $this->utf8ize($value);
                 return $this->safeJsonEncode($clean);
             default:
-                return 'Unknown error'; // or trigger_error() or throw new Exception()
+                throw new \Exception('Json Unknown error');
         }
     }
 
@@ -152,6 +152,8 @@ class JsonView
         } else {
             if (is_string($mixed)) {
                 return utf8_encode($mixed);
+            } else {
+                /*Ok*/
             }
         }
         return $mixed;
